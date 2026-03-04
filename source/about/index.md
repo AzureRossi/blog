@@ -104,6 +104,6 @@ My research interests broadly lie in video generation, 3D generation, world mode
 <div align="center">
   <p style="font-size: 1.1rem; color: #666;">
     On a journey to my true self✨ <br>
-    📮 Contact me at: <a href="zihaoy798@gmail.com">你的邮箱@domain.com</a>
+    📮 Contact me at: <a href="zihaoy798@gmail.com">zihaoy798@gmail.com</a>
   </p>
 </div>
