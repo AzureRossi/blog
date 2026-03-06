@@ -28,7 +28,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://azurerossi.github.io/blog/img/pipe.png">
 <meta property="article:published_time" content="2026-03-06T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-03-06T17:48:30.132Z">
+<meta property="article:modified_time" content="2026-03-06T18:22:59.334Z">
 <meta property="article:author" content="Yang Zihao">
 <meta property="article:tag" content="生成模型">
 <meta property="article:tag" content="视觉表征">
@@ -228,7 +228,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.5k 字
+          4.6k 字
         
       </span>
     
@@ -239,7 +239,7 @@
         
         
         
-          38 分钟
+          39 分钟
         
       </span>
     
@@ -441,19 +441,15 @@
 <!-- 从信息论的角度看，这个演进路径有某种必然性。VAE的优化目标是重建（保留所有信息），VFM的优化目标是语义理解（丢弃irrelevant details）。这两个目标**本质上是不兼容的**，仅靠alignment loss无法弥合这个根本张力。唯一的出路是直接用以语义理解为目标训练的特征空间作为生成空间——这正是RAE和SVG的做法。 -->
 
 <hr>
-<h2 id="还剩下什么问题？"><a href="#还剩下什么问题？" class="headerlink" title="还剩下什么问题？"></a>还剩下什么问题？</h2><p><img src="/blog/new_pic/5.png" srcset="/blog/img/loading.gif" lazyload alt="此类工作的发展脉络总结（阶段1→4及开放问题）"></p>
+<h2 id="此类工作的发展脉络总结"><a href="#此类工作的发展脉络总结" class="headerlink" title="此类工作的发展脉络总结"></a>此类工作的发展脉络总结</h2><p><img src="/blog/new_pic/5.png" srcset="/blog/img/loading.gif" lazyload alt="此类工作的发展脉络总结（阶段1→4及开放问题）"></p>
 <p>回头看整条发展脉络，其实每一个阶段都是在前一个阶段的问题上打补丁，是重建和生成性能的trade-off, 并没有让二者互补，相得益彰。</p>
 <p><strong>阶段1（VAVAE、REPA）</strong>：思路是在训练VAE的过程中强制语义正则化，让latent向DINOv2对齐。逻辑上没问题，但代价是训练时间极长——从一个完全不懂语义的latent硬学到足够的语义含量，32卡80G跑3-5天是常态。更根本的问题是效果上限：两个目标的内在张力始终存在，正则化力度有限，学出来的语义含量和DINO本身差得还很远。</p>
 <p><strong>阶段2（SVG、RAE）</strong>：承认”冻结的DINO就是最好的语义来源”，直接把它当tokenizer用。SVG用残差分支补细节，RAE配轻量ViT decoder直接重建——训练成本直接砍掉一个数量级。但问题没有消失，只是换了个形式：SVG把残差维度控制在8维，是因为维度一大语义就稀释了，这个8维本身就是个妥协，不是什么精心设计。语义和重建之间的trade-off还在那里，只是被压缩进了残差的维度选择里。</p>
 <p><strong>阶段3（Aligntok、UniLIP、Uniflow）</strong>：这批工作更激进——既然冻结DINO的语义上限突破不了，就干脆把DINO打开微调，在重建训练过程中用自蒸馏持续做语义监督。效果是有的，但开销和风险都很大：打开DINO之后训练里会涌现出各种trick，成本变得难以控制；更重要的是，用领域内分布去finetune一个通用VFM，泛化性的损失几乎是必然的，代价很难评估。</p>
-<p>我自己在这条路上也摸索过一个不同的方向：<strong>保持DINO冻结，但让额外的重建分支在几乎不稀释latent语义的情况下大幅提升重建能力</strong>。具体探索了两个方案：</p>
-<ul>
-<li><strong>方案a</strong>：将VAE以极小的扰动藏入DINO的分布里——DINO主分支看不出扰动，但用于重建的decoder专门放大、捕获这个扰动来恢复细节。本质上是把额外信息”隐写”进DINO分布的边角空间。</li>
-<li><strong>方案b</strong>：类似SVG的架构，保持小维度残差，但在残差接入decoder之前用一个投影矩阵把它放大到对重建更重要的表示空间——用参数而非维度来解决残差信息量不足的问题。</li>
-</ul>
 <p><strong>阶段4（iREPA、Semantic lead the way）</strong>：这是目前还在起步阶段的方向——不再纠结于tokenizer设计，而是让语义表征更上游地引导整个生成过程。</p>
-<hr>
-<p><strong>参考文献</strong></p>
+<h2 id="Is-there-a-better-solution"><a href="#Is-there-a-better-solution" class="headerlink" title="Is there a better solution?"></a>Is there a better solution?</h2><p>无论是SVG的增加残差分支来补充tokenizer重建细节，还是Uniflow这种打开VFM微调然后自蒸馏语义的方案，本质上都是在试图弥合语义和重建之间的gap，但这个gap目前这些工作我都没有看到最优雅的解法，一种让vae和vfm相得益彰的解法–让tokenizer完全保持住VFM的语义，但是大幅提升tokenizer的重建性能，直接到达vae重建能力的大幅提升。</p>
+<h3 id="自认为工程和scale-up哲学的最优解"><a href="#自认为工程和scale-up哲学的最优解" class="headerlink" title="自认为工程和scale up哲学的最优解"></a>自认为工程和scale up哲学的最优解</h3><p><img src="/blog/img/scale.png" srcset="/blog/img/loading.gif" lazyload alt="Scale Up"><br>这种解法我认为基本上是dinov4–一个在训练VFM的时候就能够良好保持住结构等信息的，模型参数量大的，数据更diverse的（比如见过很多字，这样高频信息的gap似乎有机会弥补），这样训练出来的tokenizer既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。</p>
+<h3 id="奇迹解法–将VFM的特征以一种特殊的扰动藏在vae-latent"><a href="#奇迹解法–将VFM的特征以一种特殊的扰动藏在vae-latent" class="headerlink" title="奇迹解法–将VFM的特征以一种特殊的扰动藏在vae latent"></a>奇迹解法–将VFM的特征以一种特殊的扰动藏在vae latent</h3><h2 id="这也是我实习后期一直尝试死磕的点，很可惜，暂时没有训出一个可行的版本，但是这个想法我觉得还是很有意思，甚至我认为从理论上是肯定可以做出来的。这部分我单独出一期博客，详细探讨一下当年的最可惜的一集。"><a href="#这也是我实习后期一直尝试死磕的点，很可惜，暂时没有训出一个可行的版本，但是这个想法我觉得还是很有意思，甚至我认为从理论上是肯定可以做出来的。这部分我单独出一期博客，详细探讨一下当年的最可惜的一集。" class="headerlink" title="这也是我实习后期一直尝试死磕的点，很可惜，暂时没有训出一个可行的版本，但是这个想法我觉得还是很有意思，甚至我认为从理论上是肯定可以做出来的。这部分我单独出一期博客，详细探讨一下当年的最可惜的一集。"></a>这也是我实习后期一直尝试死磕的点，很可惜，暂时没有训出一个可行的版本，但是这个想法我觉得还是很有意思，甚至我认为从理论上是肯定可以做出来的。这部分我单独出一期博客，详细探讨一下当年的最可惜的一集。</h2><p><strong>参考文献</strong></p>
 <p>【1】Jingfeng Yao et al. “Reconstruction vs. Generation: Taming Optimization Dilemma in Latent Diffusion Models.” CVPR 2025. arXiv: 2501.01423</p>
 <p>【2】Sihyun Yu et al. “Representation Alignment for Generation: Training Diffusion Transformers Is Easier Than You Think.” ICLR 2025. arXiv: 2410.06940</p>
 <p>【3】Minglei Shi et al. “Latent Diffusion Model without Variational Autoencoder.” ICLR 2026. arXiv: 2510.15301</p>
