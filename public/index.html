@@ -224,24 +224,18 @@
   <div class="row mx-auto index-card">
     
     
-      <div class="col-12 col-md-4 m-auto index-img">
-        <a href="/blog/2026/03/07/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" target="_self">
-          <img src="/blog/img/pipe.png" srcset="/blog/img/loading.gif" lazyload alt="视觉表征漫谈——从 VAVAE 到 RAE">
-        </a>
-      </div>
-    
-    <article class="col-12 col-md-8 mx-auto index-info">
+    <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/blog/2026/03/07/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" target="_self">
-          视觉表征漫谈——从 VAVAE 到 RAE
+        <a href="/blog/2026/03/03/hello-world/" target="_self">
+          Hello World
         </a>
       </h2>
 
       
-      <a class="index-excerpt " href="/blog/2026/03/07/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/blog/2026/03/03/hello-world/" target="_self">
         <div>
-          表征和 VAE、Diffusion 的关系事情的一开始要从 VAVAE 和 REPA 说起。  视觉表征（Visual Foundation Model，以下统一简写成 VFM），诸如 DINOv2、DINOv3、MAE，让神经网络在高维的隐空间（Latent Space）中学会了理解现实世界的深层物理与语义逻辑，继而可以使用这个通用的隐空间表征作为各种复杂下游视觉任务的先验，完成五花八门的下游任
+          Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick
         </div>
       </a>
 
@@ -249,8 +243,47 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-03-07 00:00" pubdate>
-              2026-03-07
+            <time datetime="2026-03-03 18:31" pubdate>
+              2026-03-03
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/blog/2026/03/02/my_vavae/" target="_self">
+          <img src="/blog/new_pic/stage2.png" srcset="/blog/img/loading.gif" lazyload alt="视觉表征漫谈2——VAVAE，RAE类工作最佳solution">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/blog/2026/03/02/my_vavae/" target="_self">
+          视觉表征漫谈2——VAVAE，RAE类工作最佳solution
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt " href="/blog/2026/03/02/my_vavae/" target="_self">
+        <div>
+          上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优雅的解法
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2026-03-02 00:00" pubdate>
+              2026-03-02
             </time>
           </div>
         
@@ -297,18 +330,24 @@
   <div class="row mx-auto index-card">
     
     
-    <article class="col-12 col-md-12 mx-auto index-info">
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/blog/2026/03/01/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" target="_self">
+          <img src="/blog/img/pipe.png" srcset="/blog/img/loading.gif" lazyload alt="视觉表征漫谈1——从 VAVAE 到 RAE">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/blog/2026/03/03/hello-world/" target="_self">
-          Hello World
+        <a href="/blog/2026/03/01/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" target="_self">
+          视觉表征漫谈1——从 VAVAE 到 RAE
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/blog/2026/03/03/hello-world/" target="_self">
+      <a class="index-excerpt " href="/blog/2026/03/01/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" target="_self">
         <div>
-          Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick
+          表征和 VAE、Diffusion 的关系事情的一开始要从 VAVAE 和 REPA 说起。  视觉表征（Visual Foundation Model，以下统一简写成 VFM），诸如 DINOv2、DINOv3、MAE，让神经网络在高维的隐空间（Latent Space）中学会了理解现实世界的深层物理与语义逻辑，继而可以使用这个通用的隐空间表征作为各种复杂下游视觉任务的先验，完成五花八门的下游任
         </div>
       </a>
 
@@ -316,12 +355,46 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-03-03 18:31" pubdate>
-              2026-03-03
+            <time datetime="2026-03-01 00:00" pubdate>
+              2026-03-01
             </time>
           </div>
         
         
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/blog/categories/%E7%A7%91%E7%A0%94%E9%9A%8F%E7%AC%94/" class="category-chain-item">科研随笔</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/blog/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/">#生成模型</a>
+            
+              <a href="/blog/tags/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/">#视觉表征</a>
+            
+              <a href="/blog/tags/Diffusion/">#Diffusion</a>
+            
+              <a href="/blog/tags/VAE/">#VAE</a>
+            
+          </div>
         
       </div>
     </article>

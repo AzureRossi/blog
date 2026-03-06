@@ -1,0 +1,723 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/blog/img/head.png">
+  <link rel="icon" href="/blog/img/head.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Zihao">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优雅的解法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="视觉表征漫谈2——VAVAE，RAE类工作最佳solution">
+<meta property="og:url" content="https://azurerossi.github.io/blog/2026/03/02/my_vavae/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优雅的解法">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://azurerossi.github.io/blog/new_pic/stage2.png">
+<meta property="article:published_time" content="2026-03-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-06T19:48:58.194Z">
+<meta property="article:author" content="Yang Zihao">
+<meta property="article:tag" content="生成模型">
+<meta property="article:tag" content="视觉表征">
+<meta property="article:tag" content="Diffusion">
+<meta property="article:tag" content="VAE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://azurerossi.github.io/blog/new_pic/stage2.png">
+  
+  
+  
+  <title>视觉表征漫谈2——VAVAE，RAE类工作最佳solution - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/blog/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/blog/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/blog/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"azurerossi.github.io","root":"/blog/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/blog/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/blog/js/utils.js" ></script>
+  <script  src="/blog/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/blog/">
+      <strong>YZH&#39;Home</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/blog/img/default_1.gif') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="视觉表征漫谈2——VAVAE，RAE类工作最佳solution"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-03-02 00:00" pubdate>
+          2026年3月2日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          12 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">视觉表征漫谈2——VAVAE，RAE类工作最佳solution</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。<br><img src="/blog/img/scale.jpg" srcset="/blog/img/loading.gif" lazyload alt="Scale Up"><br>这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。</p>
+<h2 id="有没有真的很优雅的解法？"><a href="#有没有真的很优雅的解法？" class="headerlink" title="有没有真的很优雅的解法？"></a>有没有真的很优雅的解法？</h2><p><img src="/blog/new_pic/pipe1.png" srcset="/blog/img/loading.gif" lazyload alt="layerdiffuse的pipeline"></p>
+<h3 id="图像水印学说–将图像”藏”进噪声"><a href="#图像水印学说–将图像”藏”进噪声" class="headerlink" title="图像水印学说–将图像”藏”进噪声"></a>图像水印学说–将图像”藏”进噪声</h3><p><img src="/blog/new_pic/face2ramen.png" srcset="/blog/img/loading.gif" lazyload alt="face2ramen,将人脸的image藏入拉面的image"><br>很久之前读过一篇工作——<strong>LayerDiffuse</strong>（2402.17113）。它要解决的问题很具体：如何让已经训练好的 Stable Diffusion 直接生成带透明度（alpha channel）的图像，而不破坏原有的生成质量。</p>
+<p>在这篇文章的 Related Work 2.1 节中，作者回顾了一个在多个领域都被反复验证的现象：<strong>神经网络可以将一种信息”藏”在另一种信息的扰动里，且不改变整体的特征分布</strong>。CycleGAN 最早展示了这件事——face-to-ramen 实验里，人脸的身份信息可以在视觉上完全隐匿于一碗拉面的图片之中；可逆下采样和可逆灰度化的工作进一步证明，一张完整的大图可以被编码进一张更小的图而不损失任何信息；Goodfellow 的对抗样本研究则从另一个侧面佐证了这一点——人眼不可见的微小扰动可以携带足以”欺骗”神经网络的完整语义信号。</p>
+<p>LayerDiffuse 把这个原理直接用在了 latent space 上：将 alpha channel 信息编码为一个幅度受约束的 latent offset，注入到 SD 的 latent 中，同时用分布对齐约束确保 latent 的统计特性不变。这样，原来对透明度一无所知的扩散模型，可以在几乎不改变原始 latent 空间结构的前提下，”感知”到被隐藏进去的透明度语义，而已有的 ControlNet、LoRA 等生态也可以无缝复用。</p>
+<p><strong>这个想法是否可以平行地迁移到 VFM tokenizer 的困境上？</strong><br><img src="/blog/new_pic/stage1.png" srcset="/blog/img/loading.gif" lazyload alt="我的方案的stage1"><br><img src="/blog/new_pic/stage2.png" srcset="/blog/img/loading.gif" lazyload alt="我的方案的stage2"></p>
+<h3 id="DINO-的语义是否可以被”藏”进VAE-latent中？"><a href="#DINO-的语义是否可以被”藏”进VAE-latent中？" class="headerlink" title="DINO 的语义是否可以被”藏”进VAE latent中？"></a>DINO 的语义是否可以被”藏”进VAE latent中？</h3><p>SVG 和 RAE 给出的方案，本质上都是重建和生成的trade-off——要么拼接 DINO 特征，要么直接替换 VAE。这两种方式都不可避免地改变了 latent 的维度和分布，下游的 DiT 必须针对新 latent 从头训练，已有的 SD 生态也很难复用。此外，现在的方案如果语义有大幅提升，重建性能必然大幅缩水；反之亦然。</p>
+<p>但如果借鉴 LayerDiffuse 的思路，问题就可以换一种方式提出：能否学到一个轻量的映射 $f$，把 DINO 的语义以 offset 的形式”写入” VAE latent，使得修正后的 latent 在统计分布上和原始 latent 无异，但实际上携带了更丰富的语义结构，甚至语义含量与VFM本身无异？</p>
+<p>$$<br>z_{\text{sem}} &#x3D; z_{\text{VAE}} + f!\left(F_{\text{DINO}}\right)<br>$$</p>
+<p>该方案需要同时满足三重约束：latent 的分布不能漂移（否则已有的 DiT 会失效），VAE decoder 的重建质量不能下降，同时修正后的 latent 对 DINO 特征的语义相似度要显著高于原始 latent。</p>
+<p>如果这种特征隐写可以成功，那么：已有的 DiT 可以直接在新的 latent 上 fine-tune，无需改架构，无需重新训练 tokenizer，重建性能与VAE相当，rfid指标更好。此外，因为 latent 里天然携带了语义结构，训练收敛也会更快，最终的语义含量更高，gfid指标更好。</p>
+<h3 id="理论上为什么这件事可能是对的？"><a href="#理论上为什么这件事可能是对的？" class="headerlink" title="理论上为什么这件事可能是对的？"></a>理论上为什么这件事可能是对的？</h3><p>LayerDiffuse 的分布对齐约束提供了一个直接可用的ref – 把 offset 的均值和方差强制对齐到原始 latent 的统计量上：</p>
+<p>$$<br>\Delta z_{\text{aligned}} &#x3D; \frac{\Delta z - \mu(\Delta z)}{\sigma(\Delta z)} \cdot \sigma(z_{\text{VAE}}) + \mu(z_{\text{VAE}})<br>$$</p>
+<p>SVG 的 distribution alignment 做的是完全相同的事，只是应用在了不同的地方。在合适的约束下，信息可以被完整地编码进一个分布不变的扰动中，并且可以被准确还原。我们想做的事情，在 INN 的框架下，是被证明可行的。</p>
+<h3 id="最可惜的一集"><a href="#最可惜的一集" class="headerlink" title="最可惜的一集"></a>最可惜的一集</h3><p>这个方向我在实习后期花了相当长的时间尝试，最终没有训出一个收敛的版本。</p>
+<p>实验时，最核心的难点是 offset 幅度的控制和如何让decoder感知到这个微小的$\Delta z$。$\Delta z$ 太小，语义信息实际上没有被有效写入，DiT 感知不到任何差异；太大，latent 的分布就会发生漂移，重建质量和 DiT 兼容性同时下降。这个工作点的调节极其敏感，而且会随着训练动态漂移，没有找到稳定的解。其次是多目标 loss 的梯度冲突——分布对齐、语义对齐、重建三路 loss 同时优化时，梯度方向经常相互抵消，训练曲线极不稳定，很难判断模型究竟在往哪个方向收敛。此外，如何让decoder感知到这个微小的$\Delta z$ 并在后续的架构中设计放大，准确解码出来，也是一个巨大的挑战。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/blog/categories/%E7%A7%91%E7%A0%94%E9%9A%8F%E7%AC%94/" class="category-chain-item">科研随笔</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/blog/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/" class="print-no-link">#生成模型</a>
+      
+        <a href="/blog/tags/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" class="print-no-link">#视觉表征</a>
+      
+        <a href="/blog/tags/Diffusion/" class="print-no-link">#Diffusion</a>
+      
+        <a href="/blog/tags/VAE/" class="print-no-link">#VAE</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>视觉表征漫谈2——VAVAE，RAE类工作最佳solution</div>
+      <div>https://azurerossi.github.io/blog/2026/03/02/my_vavae/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Zihao</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年3月2日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/blog/2026/03/03/hello-world/" title="Hello World">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Hello World</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/blog/2026/03/01/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" title="视觉表征漫谈1——从 VAVAE 到 RAE">
+                        <span class="hidden-mobile">视觉表征漫谈1——从 VAVAE 到 RAE</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/blog/js/events.js" ></script>
+<script  src="/blog/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/blog/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/blog/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/blog/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

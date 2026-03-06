@@ -1,0 +1,889 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/blog/img/head.png">
+  <link rel="icon" href="/blog/img/head.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Zihao">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="表征和 VAE、Diffusion 的关系事情的一开始要从 VAVAE 和 REPA 说起。  视觉表征（Visual Foundation Model，以下统一简写成 VFM），诸如 DINOv2、DINOv3、MAE，让神经网络在高维的隐空间（Latent Space）中学会了理解现实世界的深层物理与语义逻辑，继而可以使用这个通用的隐空间表征作为各种复杂下游视觉任务的先验，完成五花八门的下游任">
+<meta property="og:type" content="article">
+<meta property="og:title" content="视觉表征漫谈1——从 VAVAE 到 RAE">
+<meta property="og:url" content="https://azurerossi.github.io/blog/2026/03/01/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="表征和 VAE、Diffusion 的关系事情的一开始要从 VAVAE 和 REPA 说起。  视觉表征（Visual Foundation Model，以下统一简写成 VFM），诸如 DINOv2、DINOv3、MAE，让神经网络在高维的隐空间（Latent Space）中学会了理解现实世界的深层物理与语义逻辑，继而可以使用这个通用的隐空间表征作为各种复杂下游视觉任务的先验，完成五花八门的下游任">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://azurerossi.github.io/blog/img/pipe.png">
+<meta property="article:published_time" content="2026-02-28T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-06T19:18:27.824Z">
+<meta property="article:author" content="Yang Zihao">
+<meta property="article:tag" content="生成模型">
+<meta property="article:tag" content="视觉表征">
+<meta property="article:tag" content="Diffusion">
+<meta property="article:tag" content="VAE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://azurerossi.github.io/blog/img/pipe.png">
+  
+  
+  
+  <title>视觉表征漫谈1——从 VAVAE 到 RAE - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/blog/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/blog/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/blog/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"azurerossi.github.io","root":"/blog/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/blog/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/blog/js/utils.js" ></script>
+  <script  src="/blog/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/blog/">
+      <strong>YZH&#39;Home</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/blog/img/default_1.gif') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="视觉表征漫谈1——从 VAVAE 到 RAE"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-03-01 00:00" pubdate>
+          2026年3月1日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          39 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">视觉表征漫谈1——从 VAVAE 到 RAE</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="表征和-VAE、Diffusion-的关系"><a href="#表征和-VAE、Diffusion-的关系" class="headerlink" title="表征和 VAE、Diffusion 的关系"></a>表征和 VAE、Diffusion 的关系</h2><p>事情的一开始要从 VAVAE 和 REPA 说起。</p>
+<p><img src="/blog/img/pipe.png" srcset="/blog/img/loading.gif" lazyload alt="VFM 与 VAE 和 Diffusion 的关联"></p>
+<p>视觉表征（Visual Foundation Model，以下统一简写成 VFM），诸如 DINOv2、DINOv3、MAE，让神经网络在高维的隐空间（Latent Space）中学会了理解现实世界的深层物理与语义逻辑，继而可以使用这个通用的隐空间表征作为各种复杂下游视觉任务的先验，完成五花八门的下游任务。</p>
+<span id="more"></span>
+
+<p>很长时间以来，VFM 并没有对 2D 图像生成有着直接的冲击，更多的工作是将 VFM 以一种归纳偏置的形式引入生成 pipeline，帮助和优化结果生成，诸如 image editing 等等任务。事情的转变要从两个 2024–2025 年的工作说起。</p>
+<h3 id="VFM-与-VAE"><a href="#VFM-与-VAE" class="headerlink" title="VFM 与 VAE"></a>VFM 与 VAE</h3><p>潜在扩散模型（LDM）在生成高保真图像的方面在近年来表现非常出色。然而，在 VAE 的设计中始终存在一种困境：为了增加 VAE 重建原图的<strong>重建能力</strong>，最 native 的方案是增加 VAE latent 中 channel 的数量，比如将经典的 SD-VAE 的 4 channel 或者 8 channel 增加到 32 channel，势必会增加 VAE 的重建性能。但是增加 channel 带来的代价是巨大的，一方面，VAVAE 论文【1】指出当增加 $K$ 倍的 channel 时，LDM 达到对应的生成性能所需的数据量是<strong>指数级（$2^K$ 倍）</strong>的，这种指数级别的数据 scale 是很难接受的。另一方面，增加 channel 后想要达到相同的生成性能需要扩大 DiT 的模型规模，同时还要给予 DiT 更多的训练迭代时间。</p>
+<p>所以，现在的 LDM 中 VAE 的训练和设计是一个 trade-off：一方面 latent 的 channel 过小会导致 latent 信息损失较大，最终 DiT 生成产生视觉伪影；一方面过大的 latent channel 会使得计算成本过高从而无法收敛。</p>
+<p>这个反直觉的现象其实有一个很自然的类比——在离散 tokenizer（VQGAN&#x2F;MagViT）中，当 codebook 尺寸越来越大时，codebook 利用率会急剧下降，出现”codebook collapse”的问题。连续 VAE 里高维 latent 的情形与之本质相同：<strong>当隐空间维度过大，模型学不会如何在这个空间里高效采样</strong>。</p>
+<h3 id="两条路线的解法：REPA-和-VAVAE"><a href="#两条路线的解法：REPA-和-VAVAE" class="headerlink" title="两条路线的解法：REPA 和 VAVAE"></a>两条路线的解法：REPA 和 VAVAE</h3><p>解决这个问题的思路其实很直接——既然 DiT 在 latent space 里 lost，是因为这个 space 毫无语义结构，那就给它一个语义锚点。于是社区出现了两条同期的平行路线：</p>
+<hr>
+<p><strong>路线 A（REPA，2410.06940）：在 DiT 侧打补丁</strong></p>
+<p>REPA 的思路是不动 VAE，在 DiT 训练时额外加一个辅助 loss，让 DiT 的中间 hidden states 与冻结的 DINOv2 特征对齐：</p>
+
+$$
+\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{velocity}} + \lambda \cdot \mathcal{L}_{\text{REPA}}
+$$
+
+$$
+\mathcal{L}_{\text{REPA}} = -\mathbb{E}\left[\operatorname{sim}\!\left(f_{\text{DINO}}^{\text{patch}},\ W \cdot h_{\text{DiT}}\right)\right]
+$$
+
+<p>有一个值得注意的设计细节：对齐只发生在<strong>前几个</strong> Transformer block。实验发现前几层对齐了语义之后，后续层会自然地去专注高频细节的学习。这其实说明一件很有意思的事情：扩散模型从语义到细节的生成也有类似的层次分工，只是没有人显式地告诉它应该怎么分工——REPA 相当于在早期 layer 强制建立了语义理解的”地基”，让模型自然而然地完成剩下的”装修”。结果：SiT 在 400K 步就达到了原始 SiT 7M 步的效果，<strong>17.5 倍</strong>训练加速。</p>
+<hr>
+<p><strong>路线 B（VAVAE + LightningDiT，2501.01423）：在 VAE 侧打补丁</strong></p>
+<p>VAVAE 这篇文章指出此困境来自学习无约束高维潜在空间内在的困难。用白话讲，就是 DiT 拟合 VAE 压缩的大 channel latent 太难了，因为 VAE 压缩完的 latent 本身不怎么包含语义，更多是一种高频信息和低频信息的压缩表示，从随机噪声完全学习这种数据流形自然 time-costing &amp; expensive。最高效、最巧妙的方式，是让 DiT 在学习前就带有语义先验。</p>
+<p>VAVAE 从 VAE 训练时入手，在 VAE 训练过程中对齐潜在空间与预训练冻结的 VFM 特征，引入了两个 loss：</p>
+<ul>
+<li><strong>mcos loss</strong>（边际余弦相似度）：逐 patch 强制 VAE latent 和 DINOv2 特征的绝对对齐</li>
+<li><strong>mdms loss</strong>（边际距离矩阵相似度）：保证 pair-wise 相对结构的对齐</li>
+</ul>
+<p>两个 loss 都加了 margin，用 ReLU 截断——只对”对齐不够好的部分”施加惩罚，避免过约束 VAE 的重建能力。结合自适应权重平衡重建和对齐的梯度幅度，整个 VF Loss 非常 plug-and-play。</p>
+<p>这样一来，diffusion model 就不需要拟合毫无语义的像素层面的高频细节，而是专注于生成符合语义逻辑的 structure，收敛速度自然就快很多。最终：LightningDiT 在 <strong>64 epoch</strong> 就达到了 FID 2.11（原始 DiT 需要 1400+ epoch），<strong>21 倍</strong>训练加速，最终 FID 1.35 SOTA。</p>
+<p>如果了解过 3D 生成的人可能会轻易 get 到这个点，在 feed-forward 3D generation 没有火之前，传统的 SDS 生成加速优化的最优方式是：用 3D diffusion 初始化 3DGS。类比 VAVAE，就是在训练 DiT 前，先在训练 VAE 过程中通过强制对齐 VFM，把 DiT 的”起点”从随机噪声提升到具有语义结构的 latent space——这和 3DGS 初始化的直觉完全一致。</p>
+<hr>
+<h2 id="VAVAE-够好吗？——一些观察到的问题"><a href="#VAVAE-够好吗？——一些观察到的问题" class="headerlink" title="VAVAE 够好吗？——一些观察到的问题"></a>VAVAE 够好吗？——一些观察到的问题</h2><p>Good but not enough，作为 codebase 和 baseline，VAVAE 看起来设计的确实简洁而巧妙。但当我真正动手复现和研究的时，你会发现他可以做到更多。</p>
+<p><img src="/blog/pic/1391772792651_.pic_hd.jpg" srcset="/blog/img/loading.gif" lazyload alt="VAVAE 的问题分析与 VAE latent 特征可视化"></p>
+<p>上图右侧是 VAE latent 的特征可视化对比（Input | VAE latent | +DINOv2 | +MAE）。确实，加了 VFM 对齐之后，latent 的”色彩”和”分布”看起来更有语义感了。但是 Think deep：</p>
+<p><strong>问题 1：训练成本太高，且效果上限存疑</strong></p>
+<p>VAVAE 的训练需要在 VAE 训练过程中同时 optimize 重建 loss 和 VF Loss。这个过程相当 expensive——作者承认需要 <strong>32 卡 × 80G GPU</strong> 训练 3–5 天才能出 promising 的结果。更关键的是，从根本上来说，你是在让一个以重建为目标训练的 VAE encoder 同时学习语义表征。这两个目标是存在内在张力的：重建要求保留所有细节（包括语义无关的高频纹理），语义表征需要主动过滤这些细节。VF Loss 作为正则项，只能缓解这个矛盾，不能消除它。</p>
+<p>最终学到的 latent 虽然有语义，但<strong>相对于原本的 DINOv3&#x2F;DINOv2 远远不足</strong>。</p>
+<p><strong>问题 2：方案在优雅性上有待增强</strong></p>
+<p>从工程角度看，VF Loss 这个设计需要仔细调 margin 超参数，adaptive weighting 的 trick 也增加了实现复杂度。之前强制对齐 VAE latent 和语义表征的方案略显暴力。</p>
+<p><strong>问题 3：重建水平略有下降（minor 但存在）</strong></p>
+<p>加了 VF Loss 之后，VAE 的重建指标（PSNR、SSIM）相比纯重建 VAE 会有轻微下降——虽然不大，但说明语义对齐确实在”消耗”一部分重建容量。</p>
+<hr>
+<h2 id="My-Way：DinoOffsetVAE"><a href="#My-Way：DinoOffsetVAE" class="headerlink" title="My Way：DinoOffsetVAE"></a>My Way：DinoOffsetVAE</h2><p>带着观察到的这些问题，我直接尝试了一个更直接的思路：<strong>我们不用在 VAE 训练时强迫它对齐语义表征，而是将语义表征作为 VAE latent 的修正项。</strong></p>
+<p>于是有了 <strong>DinoOffsetVAE</strong> 这个方案。</p>
+<p><img src="/blog/pic/1401772792659_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="DinoOffsetVAE 架构设计"></p>
+<p>思路 very native：充分利用已经训练好的 VAE 和 DINOv2，不过将 DINOv2 当作原始 VAE latent 的<strong>语义修正项（offset）</strong>，在不破坏重建能力的前提下提高 latent 的语义含量。</p>
+<p>具体来说：</p>
+<ol>
+<li>VAE Encoder 正常提取 VAE Latent（冻结，不动）</li>
+<li>DINOv2 提取图像的语义特征（冻结，不动）</li>
+<li>一个轻量级的 <strong>Mapper（可训练）</strong> 将 DINOv2 特征映射到和 VAE latent 同空间的 Dino Offset</li>
+<li>$z_{\text{adj}} &#x3D; z_{\text{VAE}} + \Delta z_{\text{DINO}}$</li>
+<li>用 <code>nn.Linear</code> 将 Dino Offset 映射到 Decoder feature 维度，与 VAE Decoder 融合后重建图像</li>
+</ol>
+<p>Loss 函数包含两部分：</p>
+<ul>
+<li><strong>Rec loss</strong>：保证 Adjusted Latent 送进 VAE Decoder 后重建质量不下降</li>
+<li><strong>Cos Sim loss</strong>：让 Adjusted Latent 的语义与 DINOv2 特征保持对齐</li>
+</ul>
+<p>这个设计的好处在于：VAE 本身的重建能力完全不受影响（VAE Encoder 冻结），语义对齐完全由 Mapper 来承担，两者解耦得很干净。相比 VAVAE 从 scratch 训 VAE 的做法，这个方案<strong>轻量得多</strong>，可以在少得多的资源下快速验证。</p>
+<h3 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h3><p><img src="/blog/pic/1411772792671_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="重建效果对比（原图 | Ours | VAVAE）"></p>
+<p>从上面的城市街道场景的重建可视化来看，我们的方案（Ours）在细节保留上相比 VAVAE 更接近原图，尤其是在地面纹理、车辆细节和建筑物边缘方面。</p>
+<p>定量结果更加清晰：</p>
+<p><img src="/blog/pic/1421772792679_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="定量结果对比表"></p>
+<table>
+<thead>
+<tr>
+<th align="left">方法</th>
+<th align="center">Real PSNR ↑</th>
+<th align="center">Real SSIM ↑</th>
+<th align="center">CG PSNR ↑</th>
+<th align="center">CG SSIM ↑</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">VAVAE-epoch50</td>
+<td align="center">30.58</td>
+<td align="center">0.8818</td>
+<td align="center">31.62</td>
+<td align="center">0.9127</td>
+</tr>
+<tr>
+<td align="left">VAVAE-epoch125</td>
+<td align="center">31.41</td>
+<td align="center">0.8911</td>
+<td align="center">32.35</td>
+<td align="center">0.9205</td>
+</tr>
+<tr>
+<td align="left"><strong>Ours-epoch45</strong></td>
+<td align="center"><strong>32.20</strong></td>
+<td align="center"><strong>0.9061</strong></td>
+<td align="center"><strong>33.24</strong></td>
+<td align="center"><strong>0.9325</strong></td>
+</tr>
+</tbody></table>
+<p><strong>仅需 45 epoch</strong>，我们的方案就超过了 VAVAE 训练 125 epoch 的结果，无论是真实图像还是 CG 图像的重建指标均如此。这也说明”解耦语义对齐和重建”这个思路的优越性——当两个目标不再相互竞争，各自都能收敛得更好、更快。</p>
+<!-- 当然，方案也有失败的地方。
+
+![DinoOffsetVAE 的 Bad Cases](pic/1471772792792_.pic.jpg)
+
+某些特定类型的图像重建效果不够理想——比如有大量细密纹理的图案（电话机转盘）、强烈的光影对比（户外场景）、以及文字类图像（书籍封面）。这些 bad case 告诉我：Mapper 学到的 offset 对于 DINOv2 本身也不擅长处理的场景，自然也无法给出好的语义修正。**VAE 的重建上限依然被 DINOv2 本身的特征质量所制约**。 -->
+
+<hr>
+<h2 id="Deep-Question：为什么不直接用-VFM-做-Tokenizer？"><a href="#Deep-Question：为什么不直接用-VFM-做-Tokenizer？" class="headerlink" title="Deep Question：为什么不直接用 VFM 做 Tokenizer？"></a>Deep Question：为什么不直接用 VFM 做 Tokenizer？</h2><p>VAVAE 也好，DinoOffsetVAE 也好，本质上还是在 VAE 这个框架内修修补补。一个更根本的问题：</p>
+<blockquote>
+<p><strong>既然 VFM 特征对 DiT 训练这么有帮助，为什么不直接把 VFM 作为 tokenizer？</strong></p>
+</blockquote>
+<p>抛弃 VAE，直接用 DINOv3 的特征做 diffusion 的目标分布，不是语义含量更高，更直接吗？</p>
+<p><img src="/blog/pic/1431772792687_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="直接用 VFM 做 tokenizer 的架构设计（Stage 1: Latent Alignment）"></p>
+<p>方案是：冻结 Foundation Encoder（DINOv3），在其后接一个轻量级的 trainable Adapter，将特征”适配”到目标 latent 维度，然后接一个 trainable Decoder 做重建。</p>
+<p>结果是……</p>
+<p><img src="/blog/pic/1441772792701_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="直接用 VFM 特征重建的结果，从开始迭代到后来迭代的过程"></p>
+<p>我们直接快进到收敛迭代的结果：</p>
+<p><img src="/blog/pic/1451772792711_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="DINOv2/DINOv3 能重建主体语义，但缺少细节感知"></p>
+<p><strong>DINOv2&#x2F;DINOv3 能重建主体语义——物体的位置、大概形状、类别信息——但是严重缺少细节感知</strong>：</p>
+<ul>
+<li>路由器能认出是路由器，但细节纹理、天线的精细形状消失了</li>
+<li>校车能认出是校车，但颜色不对、文字没了</li>
+<li>香蕉的形状大概对，但颜色信息很差、叶子细节全无</li>
+</ul>
+<p>这说明 VFM 本身作为 tokenizer 是 not enough 的：DINO 是在语义对比损失下训练的，它<strong>主动丢弃</strong>了高频、低语义的细节信息（颜色、纹理、精细纹路），因为这些信息对分类&#x2F;检测等判别任务反而是噪声。Representation learning 的本质就是 eliminating unnecessary details（LeCun 的一句老话，但在这里找到了生成领域的具体体现）。</p>
+<p>所以，直接用 VFM 做 tokenizer 的困境是：<strong>语义太多，细节太少</strong>——这恰好和 VAE tokenizer 的问题相反（VAE：细节太多，语义太少）。</p>
+<p>这里还有一个不那么明显但很关键的工程问题。RAE 论文（2510.11690）给出了一个严格的理论证明：当 DiT 的宽度（hidden dimension）小于 token 的 channel 维度时，flow matching loss 存在一个<strong>与数据分布无关的正下界</strong>：</p>
+<p>$$<br>\mathcal{L}(g, \theta) \geq \sum_{i&#x3D;d+1}^{n} \lambda_i &gt; 0<br>$$</p>
+<p>从直觉上理解，扩散模型训练时会向数据注入高斯噪声，这相当于将数据流形”扩散”到整个高维空间——原本低维的流形支撑被扩展到了 full-rank 空间。如果 DiT 宽度不够，它根本没有能力表示这个 full-rank 分布，无论怎么训都无法收敛。</p>
+<p>同期相同想法的 RAE 做了一个很有意思的实验验证：对一张图片过拟合，然后把 DiT 宽度从 384 逐渐增加到 768。当宽度 &lt; token 维度（768）时，彻底失败；当宽度 ≥ token 维度时，立刻成功——<strong>是宽度，不是深度</strong>。</p>
+<p>这说明直接用 DINOv2-ViT-B&#x2F;16 的 768 维特征做 latent，需要相应地将 DiT 宽度也扩展到 768 以上。这不是没法做，但需要仔细的架构设计。</p>
+<hr>
+<h2 id="同期的撞车-Idea：SVG-与-RAE"><a href="#同期的撞车-Idea：SVG-与-RAE" class="headerlink" title="同期的撞车 Idea：SVG 与 RAE"></a>同期的撞车 Idea：SVG 与 RAE</h2><p>在纠结这两个问题（细节缺失 &amp; DiT 宽度限制）的时候，同期出现了两个和我想法高度吻合的工作，分别独立地给出了自己的解答。</p>
+<h3 id="SVG：清华自动化的同期方案"><a href="#SVG：清华自动化的同期方案" class="headerlink" title="SVG：清华自动化的同期方案"></a>SVG：清华自动化的同期方案</h3><p><img src="/blog/pic/1461772792777_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="SVG 架构：DINO + Residual Encoder（同期工作）"></p>
+<p>SVG（LDM without Variational Autoencoder，2510.15301）是来自清华自动化的工作，<strong>完全抛弃 VAE</strong>，提出了一个我看到就觉得一模一样的方案😥——用 DINOv3 特征加上一个 <strong>Residual Encoder</strong> 来构建新的 latent space：</p>
+<p>$$<br>z_{\text{SVG}} &#x3D; \left[f_{\text{DINO}}(x) ;|; f_{\text{Res}}(x)\right]<br>$$</p>
+<p>Residual Encoder 专门负责补充 DINO 特征里缺失的颜色和细粒度感知细节，两路特征在 channel 维度上直接 concat。为了防止 Residual Encoder 的输出破坏 DINO 原有的语义分布，SVG 对残差特征做 batch-statistics 级别的对齐（Distribution Alignment）：</p>
+<p>$$<br>\hat{F}_R &#x3D; \frac{F_R - \mu(F_R)}{\sigma(F_R)} \cdot \sigma(F_D) + \mu(F_D)<br>$$</p>
+<p><img src="/blog/new_pic/1.png" srcset="/blog/img/loading.gif" lazyload alt="SVG tokenizer 的重建效果（好坏案例均有展示）"></p>
+<p>其实这步是这个设计中我认为最关键的一步，既保留了 DINO 的强语义判别性，又补充了生成所需的感知细节。最终的 SVG Feature 兼具语义判别性和重建能力，是一个 <strong>task-general</strong> 的统一特征空间——同一套特征可以同时支持生成、感知和语义理解任务。</p>
+<p><strong>为什么 SVG 能 work？</strong> 从 latent space 的语义分散性（semantic discriminability）角度来分析：当 latent space 里同类别的样本聚集、不同类别的样本分散时，diffusion model 的 mean velocity 方向在同类别内是一致的、在不同类别间是相互区分的。这种结构化的速度场使得：</p>
+<ol>
+<li>DiT 学习更容易（方向更明确，歧义性低）</li>
+<li><strong>天然支持 few-step 采样</strong>（ODE 路径更直，5 步就能得到好结果）</li>
+</ol>
+<p>对比之下，原始 SD-VAE latent 的语义纠缠使得不同类别的 velocity 方向混杂，DiT 需要更多步骤来”解开”这种歧义。</p>
+<p>SVG 在 ImageNet 256×256 上（80 epoch，25 步采样）：gFID&#x3D;6.57（w&#x2F;o CFG），gFID&#x3D;3.54（w&#x2F; CFG），训练 500 epoch 后进一步到 gFID&#x3D;2.10（w&#x2F; CFG）——而且同时支持多个视觉任务，不只是生成。</p>
+<h3 id="RAE"><a href="#RAE" class="headerlink" title="RAE"></a>RAE</h3><p>RAE（Diffusion Transformers with Representation Autoencoders，2510.11690）来自纽约大学，做的事情更激进：直接用<strong>冻结的 VFM encoder</strong>（DINO&#x2F;SigLIP&#x2F;MAE）配上一个训练好的<strong>轻量 ViT decoder</strong>，组成 Representation Autoencoder（RAE），替换 SD-VAE。</p>
+<p>这个工作挑战了两个长期被视为”常识”的假设：</p>
+<ol>
+<li><p><del>“VFM 特征不能用于重建，因为丢失了低级细节”</del><br>→ 实验证明：配上合适的 ViT decoder，冻结的 DINO&#x2F;SigLIP&#x2F;MAE 特征重建质量<strong>全面优于 SD-VAE</strong>（MAE-B 的 rFID 0.16，DINO-B 的 rFID 0.49，vs SD-VAE 的 0.62）</p>
+</li>
+<li><p><del>“高维 latent space 对 DiT 训练很困难”</del><br>→ 理论 + 实验证明：只要 DiT 宽度 ≥ token 维度，高维不是问题，反而是优势</p>
+</li>
+</ol>
+<p><img src="/blog/new_pic/2.png" srcset="/blog/img/loading.gif" lazyload alt="RAE tokenizer 的重建效果（包含典型失败案例）"></p>
+<p>RAE 系统性地解决了直接使用高维 VFM 特征的三个工程挑战：</p>
+<ul>
+<li><strong>宽度缩放</strong>：DiT 宽度需 ≥ 768 → 引入 DDT head（宽但浅），在不增加 quadratic attention 成本的前提下增加模型宽度</li>
+<li><strong>噪声调度</strong>：原有基于分辨率的 noise schedule shift 没有考虑 channel 维度 → dimension-aware noise schedule</li>
+<li><strong>解码器鲁棒性</strong>：RAE decoder 训练时只见过干净 latent，推理时 DiT 输出有小量误差 → noise-augmented decoder training</li>
+</ul>
+<p>最终，<strong>无需任何 REPA-style 的 alignment loss</strong>（因为 latent 本身就是语义丰富的），FID 1.51（无 guidance）&#x2F; <strong>1.13</strong>（有 guidance），同时 encoder 计算量比 SD-VAE 少 6×，decoder 少 3×。</p>
+<p><img src="/blog/new_pic/3.png" srcset="/blog/img/loading.gif" lazyload alt="RAE DiT 的生成质量——多类别（无 CFG）"></p>
+<p><img src="/blog/new_pic/4.png" srcset="/blog/img/loading.gif" lazyload alt="RAE DiT 的类条件生成质量——北极狐（有 CFG）"></p>
+<p>两条路殊途同归，都指向同一个结论：<strong>VFM 特征才是更自然的生成空间载体</strong>，只需要解决细节重建的问题，生成本身反而变得更容易。</p>
+<!-- 从信息论的角度看，这个演进路径有某种必然性。VAE 的优化目标是重建（保留所有信息），VFM 的优化目标是语义理解（丢弃 irrelevant details）。这两个目标**本质上是不兼容的**，仅靠 alignment loss 无法弥合这个根本张力。唯一的出路是直接用以语义理解为目标训练的特征空间作为生成空间——这正是 RAE 和 SVG 的做法。 -->
+
+<hr>
+<h2 id="此类工作的发展脉络总结"><a href="#此类工作的发展脉络总结" class="headerlink" title="此类工作的发展脉络总结"></a>此类工作的发展脉络总结</h2><p><img src="/blog/new_pic/5.png" srcset="/blog/img/loading.gif" lazyload alt="此类工作的发展脉络总结（阶段 1→4 及开放问题）"></p>
+<p>回头看整条发展脉络，其实每一个阶段都是在前一个阶段的问题上打补丁，是重建和生成性能的 trade-off，并没有让二者互补、相得益彰。</p>
+<p><strong>阶段 1（VAVAE、REPA）</strong>：思路是在训练 VAE 的过程中强制语义正则化，让 latent 向 DINOv2 对齐。逻辑上没问题，但代价是训练时间极长——从一个完全不懂语义的 latent 硬学到足够的语义含量，32 卡 80G 跑 3–5 天是常态。更根本的问题是效果上限：两个目标的内在张力始终存在，正则化力度有限，学出来的语义含量和 DINO 本身差得还很远。</p>
+<p><strong>阶段 2（SVG、RAE）</strong>：承认”冻结的 DINO 就是最好的语义来源”，直接把它当 tokenizer 用。SVG 用残差分支补细节，RAE 配轻量 ViT decoder 直接重建——训练成本直接砍掉一个数量级。但问题没有消失，只是换了个形式：SVG 把残差维度控制在 8 维，是因为维度一大语义就稀释了，这个 8 维本身就是个妥协，不是什么精心设计。语义和重建之间的 trade-off 还在那里，只是被压缩进了残差的维度选择里。</p>
+<p><strong>阶段 3（Aligntok、UniLIP、Uniflow）</strong>：这批工作更激进——既然冻结 DINO 的语义上限突破不了，就干脆把 DINO 打开微调，在重建训练过程中用自蒸馏持续做语义监督。效果是有的，但开销和风险都很大：打开 DINO 之后训练里会涌现出各种 trick，成本变得难以控制；更重要的是，用领域内分布去 finetune 一个通用 VFM，泛化性的损失几乎是必然的，代价很难评估。</p>
+<p><strong>阶段 4（iREPA、Semantic lead the way）</strong>：这是目前还在起步阶段的方向——不再纠结于 tokenizer 设计，而是让语义表征更上游地引导整个生成过程。</p>
+<hr>
+<h2 id="Is-There-a-Better-Solution"><a href="#Is-There-a-Better-Solution" class="headerlink" title="Is There a Better Solution?"></a>Is There a Better Solution?</h2><p>无论是 SVG 的增加残差分支来补充 tokenizer 重建细节，还是 Uniflow 这种打开 VFM 微调然后自蒸馏语义的方案，本质上都是在试图弥合语义和重建之间的 gap，但这个 gap 目前这些工作我都没有看到最优雅的解法——一种让 VAE 和 VFM 相得益彰的解法：让 tokenizer 完全保持住 VFM 的语义，但是大幅提升 tokenizer 的重建性能，直接到达 VAE 重建能力的大幅提升。</p>
+<h3 id="自认为工程和-Scale-Up-哲学的最优解"><a href="#自认为工程和-Scale-Up-哲学的最优解" class="headerlink" title="自认为工程和 Scale Up 哲学的最优解"></a>自认为工程和 Scale Up 哲学的最优解</h3><p><img src="/blog/img/scale.jpg" srcset="/blog/img/loading.gif" lazyload alt="Scale Up"></p>
+<p>这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。</p>
+<h3 id="奇迹解法——将-VFM-的特征以一种特殊的扰动藏在-VAE-Latent"><a href="#奇迹解法——将-VFM-的特征以一种特殊的扰动藏在-VAE-Latent" class="headerlink" title="奇迹解法——将 VFM 的特征以一种特殊的扰动藏在 VAE Latent"></a>奇迹解法——将 VFM 的特征以一种特殊的扰动藏在 VAE Latent</h3><p>这也是我实习后期一直尝试死磕的点，很可惜，暂时没有训出一个可行的版本，但是这个想法我觉得还是很有意思，甚至我认为从理论上是肯定可以做出来的。这部分我单独出一期博客，详细探讨一下当年的最可惜的一集。</p>
+<hr>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ol>
+<li>Jingfeng Yao et al. “Reconstruction vs. Generation: Taming Optimization Dilemma in Latent Diffusion Models.” <em>CVPR 2025</em>. arXiv: 2501.01423</li>
+<li>Sihyun Yu et al. “Representation Alignment for Generation: Training Diffusion Transformers Is Easier Than You Think.” <em>ICLR 2025</em>. arXiv: 2410.06940</li>
+<li>Minglei Shi et al. “Latent Diffusion Model without Variational Autoencoder.” <em>ICLR 2026</em>. arXiv: 2510.15301</li>
+<li>Boyang Zheng et al. “Diffusion Transformers with Representation Autoencoders.” <em>ICLR 2026</em>. arXiv: 2510.11690</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/blog/categories/%E7%A7%91%E7%A0%94%E9%9A%8F%E7%AC%94/" class="category-chain-item">科研随笔</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/blog/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/" class="print-no-link">#生成模型</a>
+      
+        <a href="/blog/tags/%E8%A7%86%E8%A7%89%E8%A1%A8%E5%BE%81/" class="print-no-link">#视觉表征</a>
+      
+        <a href="/blog/tags/Diffusion/" class="print-no-link">#Diffusion</a>
+      
+        <a href="/blog/tags/VAE/" class="print-no-link">#VAE</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>视觉表征漫谈1——从 VAVAE 到 RAE</div>
+      <div>https://azurerossi.github.io/blog/2026/03/01/视觉表征/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Zihao</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年3月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/blog/2026/03/02/my_vavae/" title="视觉表征漫谈2——VAVAE，RAE类工作最佳solution">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">视觉表征漫谈2——VAVAE，RAE类工作最佳solution</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/blog/js/events.js" ></script>
+<script  src="/blog/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/blog/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/blog/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/blog/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
