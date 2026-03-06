@@ -28,7 +28,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://azurerossi.github.io/blog/img/pipe.png">
 <meta property="article:published_time" content="2026-03-06T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-03-06T18:43:03.812Z">
+<meta property="article:modified_time" content="2026-03-06T18:53:27.744Z">
 <meta property="article:author" content="Yang Zihao">
 <meta property="article:tag" content="生成模型">
 <meta property="article:tag" content="视觉表征">
@@ -294,8 +294,15 @@
 <hr>
 <p><strong>路线 A（REPA，2410.06940）：在 DiT 侧打补丁</strong></p>
 <p>REPA 的思路是不动 VAE，在 DiT 训练时额外加一个辅助 loss，让 DiT 的中间 hidden states 与冻结的 DINOv2 特征对齐：</p>
-<p>$$<br>\mathcal{L}<em>{\text{total}} &#x3D; \mathcal{L}</em>{\text{velocity}} + \lambda \cdot \mathcal{L}_{\text{REPA}}<br>$$</p>
-<p>$$<br>\mathcal{L}<em>{\text{REPA}} &#x3D; -\mathbb{E}\left[\operatorname{sim}!\left(f</em>{\text{DINO}}^{\text{patch}},\ W \cdot h_{\text{DiT}}\right)\right]<br>$$</p>
+
+$$
+\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{velocity}} + \lambda \cdot \mathcal{L}_{\text{REPA}}
+$$
+
+$$
+\mathcal{L}_{\text{REPA}} = -\mathbb{E}\left[\operatorname{sim}\!\left(f_{\text{DINO}}^{\text{patch}},\ W \cdot h_{\text{DiT}}\right)\right]
+$$
+
 <p>有一个值得注意的设计细节：对齐只发生在<strong>前几个</strong> Transformer block。实验发现前几层对齐了语义之后，后续层会自然地去专注高频细节的学习。这其实说明一件很有意思的事情：扩散模型从语义到细节的生成也有类似的层次分工，只是没有人显式地告诉它应该怎么分工——REPA 相当于在早期 layer 强制建立了语义理解的”地基”，让模型自然而然地完成剩下的”装修”。结果：SiT 在 400K 步就达到了原始 SiT 7M 步的效果，<strong>17.5 倍</strong>训练加速。</p>
 <hr>
 <p><strong>路线 B（VAVAE + LightningDiT，2501.01423）：在 VAE 侧打补丁</strong></p>
@@ -452,7 +459,7 @@
 <p><strong>阶段 4（iREPA、Semantic lead the way）</strong>：这是目前还在起步阶段的方向——不再纠结于 tokenizer 设计，而是让语义表征更上游地引导整个生成过程。</p>
 <hr>
 <h2 id="Is-There-a-Better-Solution"><a href="#Is-There-a-Better-Solution" class="headerlink" title="Is There a Better Solution?"></a>Is There a Better Solution?</h2><p>无论是 SVG 的增加残差分支来补充 tokenizer 重建细节，还是 Uniflow 这种打开 VFM 微调然后自蒸馏语义的方案，本质上都是在试图弥合语义和重建之间的 gap，但这个 gap 目前这些工作我都没有看到最优雅的解法——一种让 VAE 和 VFM 相得益彰的解法：让 tokenizer 完全保持住 VFM 的语义，但是大幅提升 tokenizer 的重建性能，直接到达 VAE 重建能力的大幅提升。</p>
-<h3 id="自认为工程和-Scale-Up-哲学的最优解"><a href="#自认为工程和-Scale-Up-哲学的最优解" class="headerlink" title="自认为工程和 Scale Up 哲学的最优解"></a>自认为工程和 Scale Up 哲学的最优解</h3><p><img src="/blog/img/scale.png" srcset="/blog/img/loading.gif" lazyload alt="Scale Up"></p>
+<h3 id="自认为工程和-Scale-Up-哲学的最优解"><a href="#自认为工程和-Scale-Up-哲学的最优解" class="headerlink" title="自认为工程和 Scale Up 哲学的最优解"></a>自认为工程和 Scale Up 哲学的最优解</h3><p><img src="/blog/img/scale.jpg" srcset="/blog/img/loading.gif" lazyload alt="Scale Up"></p>
 <p>这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。</p>
 <h3 id="奇迹解法——将-VFM-的特征以一种特殊的扰动藏在-VAE-Latent"><a href="#奇迹解法——将-VFM-的特征以一种特殊的扰动藏在-VAE-Latent" class="headerlink" title="奇迹解法——将 VFM 的特征以一种特殊的扰动藏在 VAE Latent"></a>奇迹解法——将 VFM 的特征以一种特殊的扰动藏在 VAE Latent</h3><p>这也是我实习后期一直尝试死磕的点，很可惜，暂时没有训出一个可行的版本，但是这个想法我觉得还是很有意思，甚至我认为从理论上是肯定可以做出来的。这部分我单独出一期博客，详细探讨一下当年的最可惜的一集。</p>
 <hr>
