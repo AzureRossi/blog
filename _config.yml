@@ -102,3 +102,15 @@ theme: fluid
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: ''
+
+# Markdown renderer (hexo-renderer-marked) settings
+marked:
+  prependRoot: true
+  mathjax: true
+
+markdown:
+  plugins:
+    - markdown-it-mathjax3
+  prependRoot: true
+  render:
+    html: true

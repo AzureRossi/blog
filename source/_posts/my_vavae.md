@@ -13,13 +13,13 @@ math: true
 ---
 
 上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。
-![Scale Up](/img/scale.jpg)
+![Scale Up](../../../../img/scale.jpg)
 这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。
 
 ## 有没有真的很优雅的解法？
-![layerdiffuse的pipeline](/new_pic/pipe1.png)
+![layerdiffuse的pipeline](../../../../new_pic/pipe1.png)
 ### 图像水印学说--将图像"藏"进噪声
-![face2ramen,将人脸的image藏入拉面的image](/new_pic/face2ramen.png)
+![face2ramen,将人脸的image藏入拉面的image](../../../../new_pic/face2ramen.png)
 很久之前读过一篇工作——**LayerDiffuse**（2402.17113）。它要解决的问题很具体：如何让已经训练好的 Stable Diffusion 直接生成带透明度（alpha channel）的图像，而不破坏原有的生成质量。
 
 在这篇文章的 Related Work 2.1 节中，作者回顾了一个在多个领域都被反复验证的现象：**神经网络可以将一种信息"藏"在另一种信息的扰动里，且不改变整体的特征分布**。CycleGAN 最早展示了这件事——face-to-ramen 实验里，人脸的身份信息可以在视觉上完全隐匿于一碗拉面的图片之中；可逆下采样和可逆灰度化的工作进一步证明，一张完整的大图可以被编码进一张更小的图而不损失任何信息；Goodfellow 的对抗样本研究则从另一个侧面佐证了这一点——人眼不可见的微小扰动可以携带足以"欺骗"神经网络的完整语义信号。
@@ -27,8 +27,8 @@ math: true
 LayerDiffuse 把这个原理直接用在了 latent space 上：将 alpha channel 信息编码为一个幅度受约束的 latent offset，注入到 SD 的 latent 中，同时用分布对齐约束确保 latent 的统计特性不变。这样，原来对透明度一无所知的扩散模型，可以在几乎不改变原始 latent 空间结构的前提下，"感知"到被隐藏进去的透明度语义，而已有的 ControlNet、LoRA 等生态也可以无缝复用。
 
 **这个想法是否可以平行地迁移到 VFM tokenizer 的困境上？**
-![我的方案的stage1](/new_pic/stage1.png)
-![我的方案的stage2](/new_pic/stage2.png)
+![我的方案的stage1](../../../../new_pic/stage1.png)
+![我的方案的stage2](../../../../new_pic/stage2.png)
 ### DINO 的语义是否可以被"藏"进VAE latent中？
 
 SVG 和 RAE 给出的方案，本质上都是重建和生成的trade-off——要么拼接 DINO 特征，要么直接替换 VAE。这两种方式都不可避免地改变了 latent 的维度和分布，下游的 DiT 必须针对新 latent 从头训练，已有的 SD 生态也很难复用。此外，现在的方案如果语义有大幅提升，重建性能必然大幅缩水；反之亦然。
