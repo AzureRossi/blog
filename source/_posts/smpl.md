@@ -1,5 +1,5 @@
 ---
-title:MDMPro：smpl motion2motion diffusiom model
+title: MDMPro：smpl motion2motion diffusiom model
 date: 2026-03-03
 tags:
   - 生成模型

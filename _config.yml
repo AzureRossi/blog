@@ -111,6 +111,7 @@ marked:
 markdown:
   plugins:
     - markdown-it-mathjax3
+    - markdown-it-footnote
   prependRoot: true
   render:
     html: true
