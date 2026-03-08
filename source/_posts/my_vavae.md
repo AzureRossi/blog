@@ -1,5 +1,5 @@
 ---
-title: 视觉表征漫谈2——VAVAE，RAE类工作最佳solution
+title: 视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation
 date: 2026-03-02
 tags:
   - 生成模型
@@ -14,7 +14,7 @@ math: true
 
 上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。
 ![Scale Up](../../../../img/scale.jpg)
-这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。
+这种解法可能是 DINOv4 探索的方案——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。
 
 ## 有没有真的很优雅的解法？
 ![layerdiffuse的pipeline](../../../../new_pic/pipe1.png)

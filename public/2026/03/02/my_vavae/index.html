@@ -19,16 +19,16 @@
   <meta name="author" content="Yang Zihao">
   <meta name="keywords" content="">
   
-    <meta name="description" content="上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。  这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优雅的">
+    <meta name="description" content="上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。  这种解法可能是 DINOv4 探索的方案——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优">
 <meta property="og:type" content="article">
-<meta property="og:title" content="视觉表征漫谈2——VAVAE，RAE类工作最佳solution">
+<meta property="og:title" content="视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation">
 <meta property="og:url" content="https://azurerossi.github.io/blog/2026/03/02/my_vavae/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。  这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优雅的">
+<meta property="og:description" content="上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。  这种解法可能是 DINOv4 探索的方案——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://azurerossi.github.io/blog/new_pic/stage2.png">
 <meta property="article:published_time" content="2026-03-01T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-03-07T12:14:25.494Z">
+<meta property="article:modified_time" content="2026-03-08T16:11:49.503Z">
 <meta property="article:author" content="Yang Zihao">
 <meta property="article:tag" content="生成模型">
 <meta property="article:tag" content="视觉表征">
@@ -39,7 +39,7 @@
   
   
   
-  <title>视觉表征漫谈2——VAVAE，RAE类工作最佳solution - Hexo</title>
+  <title>视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -205,7 +205,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="视觉表征漫谈2——VAVAE，RAE类工作最佳solution"></span>
+            <span id="subtitle" data-typed-text="视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation"></span>
           
         </div>
 
@@ -276,14 +276,14 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">视觉表征漫谈2——VAVAE，RAE类工作最佳solution</h1>
+            <h1 id="seo-header">视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation</h1>
             
             
               <div class="markdown-body">
                 
                 <p>上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。<br>
 <img src="../../../../img/scale.jpg" srcset="/blog/img/loading.gif" lazyload alt="Scale Up"><br>
-这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。</p>
+这种解法可能是 DINOv4 探索的方案——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。</p>
 <h2 id="有没有真的很优雅的解法？">有没有真的很优雅的解法？</h2>
 <p><img src="../../../../new_pic/pipe1.png" srcset="/blog/img/loading.gif" lazyload alt="layerdiffuse的pipeline"></p>
 <h3 id="图像水印学说–将图像-藏-进噪声">图像水印学说–将图像&quot;藏&quot;进噪声</h3>
@@ -297,9 +297,9 @@
 <h3 id="DINO-的语义是否可以被-藏-进VAE-latent中？">DINO 的语义是否可以被&quot;藏&quot;进VAE latent中？</h3>
 <p>SVG 和 RAE 给出的方案，本质上都是重建和生成的trade-off——要么拼接 DINO 特征，要么直接替换 VAE。这两种方式都不可避免地改变了 latent 的维度和分布，下游的 DiT 必须针对新 latent 从头训练，已有的 SD 生态也很难复用。此外，现在的方案如果语义有大幅提升，重建性能必然大幅缩水；反之亦然。</p>
 <p>但如果借鉴 LayerDiffuse 的思路，问题就可以换一种方式提出：能否学到一个轻量的映射 
-    <span id="mjx-ea1418d">
+    <span id="mjx-35c671d">
       <style>
-      #mjx-ea1418d{
+      #mjx-35c671d{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -459,9 +459,9 @@ g[data-mml-node="xypic"] path {
     </span>
   ，把 DINO 的语义以 offset 的形式&quot;写入&quot; VAE latent，使得修正后的 latent 在统计分布上和原始 latent 无异，但实际上携带了更丰富的语义结构，甚至语义含量与VFM本身无异？</p>
 
-    <span id="mjx-427aa7e8">
+    <span id="mjx-5e654918">
       <style>
-      #mjx-427aa7e8{
+      #mjx-5e654918{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -624,9 +624,9 @@ g[data-mml-node="xypic"] path {
 <h3 id="理论上为什么这件事可能是对的？">理论上为什么这件事可能是对的？</h3>
 <p>LayerDiffuse 的分布对齐约束提供了一个直接可用的ref – 把 offset 的均值和方差强制对齐到原始 latent 的统计量上：</p>
 
-    <span id="mjx-7f366378">
+    <span id="mjx-f1c54fc">
       <style>
-      #mjx-7f366378{
+      #mjx-f1c54fc{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -788,9 +788,9 @@ g[data-mml-node="xypic"] path {
 <h3 id="最可惜的一集">最可惜的一集</h3>
 <p>这个方向我在实习后期花了相当长的时间尝试，最终没有训出一个收敛的版本。</p>
 <p>实验时，最核心的难点是 offset 幅度的控制和如何让decoder感知到这个微小的
-    <span id="mjx-03e55c78">
+    <span id="mjx-2f606098">
       <style>
-      #mjx-03e55c78{
+      #mjx-2f606098{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -949,9 +949,9 @@ g[data-mml-node="xypic"] path {
       <mjx-container class="MathJax" jax="SVG" style="position: relative;"><svg style="vertical-align: -0.025ex;" xmlns="http://www.w3.org/2000/svg" width="2.937ex" height="1.645ex" role="img" focusable="false" viewBox="0 -716 1298 727" aria-hidden="true"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><path data-c="394" d="M51 0Q46 4 46 7Q46 9 215 357T388 709Q391 716 416 716Q439 716 444 709Q447 705 616 357T786 7Q786 4 781 0H51ZM507 344L384 596L137 92L383 91H630Q630 93 507 344Z"></path></g><g data-mml-node="mi" transform="translate(833,0)"><path data-c="1D467" d="M347 338Q337 338 294 349T231 360Q211 360 197 356T174 346T162 335T155 324L153 320Q150 317 138 317Q117 317 117 325Q117 330 120 339Q133 378 163 406T229 440Q241 442 246 442Q271 442 291 425T329 392T367 375Q389 375 411 408T434 441Q435 442 449 442H462Q468 436 468 434Q468 430 463 420T449 399T432 377T418 358L411 349Q368 298 275 214T160 106L148 94L163 93Q185 93 227 82T290 71Q328 71 360 90T402 140Q406 149 409 151T424 153Q443 153 443 143Q443 138 442 134Q425 72 376 31T278 -11Q252 -11 232 6T193 40T155 57Q111 57 76 -3Q70 -11 59 -11H54H41Q35 -5 35 -2Q35 13 93 84Q132 129 225 214T340 322Q352 338 347 338Z"></path></g></g></g></svg><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi mathvariant="normal">Δ</mi><mi>z</mi></math></mjx-assistive-mml></mjx-container>
     </span>
   。
-    <span id="mjx-ea6e2fd">
+    <span id="mjx-19adefb8">
       <style>
-      #mjx-ea6e2fd{
+      #mjx-19adefb8{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -1110,9 +1110,9 @@ g[data-mml-node="xypic"] path {
       <mjx-container class="MathJax" jax="SVG" style="position: relative;"><svg style="vertical-align: -0.025ex;" xmlns="http://www.w3.org/2000/svg" width="2.937ex" height="1.645ex" role="img" focusable="false" viewBox="0 -716 1298 727" aria-hidden="true"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><path data-c="394" d="M51 0Q46 4 46 7Q46 9 215 357T388 709Q391 716 416 716Q439 716 444 709Q447 705 616 357T786 7Q786 4 781 0H51ZM507 344L384 596L137 92L383 91H630Q630 93 507 344Z"></path></g><g data-mml-node="mi" transform="translate(833,0)"><path data-c="1D467" d="M347 338Q337 338 294 349T231 360Q211 360 197 356T174 346T162 335T155 324L153 320Q150 317 138 317Q117 317 117 325Q117 330 120 339Q133 378 163 406T229 440Q241 442 246 442Q271 442 291 425T329 392T367 375Q389 375 411 408T434 441Q435 442 449 442H462Q468 436 468 434Q468 430 463 420T449 399T432 377T418 358L411 349Q368 298 275 214T160 106L148 94L163 93Q185 93 227 82T290 71Q328 71 360 90T402 140Q406 149 409 151T424 153Q443 153 443 143Q443 138 442 134Q425 72 376 31T278 -11Q252 -11 232 6T193 40T155 57Q111 57 76 -3Q70 -11 59 -11H54H41Q35 -5 35 -2Q35 13 93 84Q132 129 225 214T340 322Q352 338 347 338Z"></path></g></g></g></svg><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi mathvariant="normal">Δ</mi><mi>z</mi></math></mjx-assistive-mml></mjx-container>
     </span>
    太小，语义信息实际上没有被有效写入，DiT 感知不到任何差异；太大，latent 的分布就会发生漂移，重建质量和 DiT 兼容性同时下降。这个工作点的调节极其敏感，而且会随着训练动态漂移，没有找到稳定的解。其次是多目标 loss 的梯度冲突——分布对齐、语义对齐、重建三路 loss 同时优化时，梯度方向经常相互抵消，训练曲线极不稳定，很难判断模型究竟在往哪个方向收敛。此外，如何让decoder感知到这个微小的
-    <span id="mjx-3764c1b8">
+    <span id="mjx-296be0f">
       <style>
-      #mjx-3764c1b8{
+      #mjx-296be0f{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -1322,7 +1322,7 @@ g[data-mml-node="xypic"] path {
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>视觉表征漫谈2——VAVAE，RAE类工作最佳solution</div>
+      <div>视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation</div>
       <div>https://azurerossi.github.io/blog/2026/03/02/my_vavae/</div>
     </div>
     <div class="license-meta">

@@ -224,42 +224,9 @@
   <div class="row mx-auto index-card">
     
     
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/blog/2026/03/03/hello-world/" target="_self">
-          Hello World
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/blog/2026/03/03/hello-world/" target="_self">
-        <div>
-          Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2026-03-03 18:31" pubdate>
-              2026-03-03
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
       <div class="col-12 col-md-4 m-auto index-img">
         <a href="/blog/2026/03/03/DreamFragment/" target="_self">
-          <img src="/blog/img/dreamfragment_teaser.png" srcset="/blog/img/loading.gif" lazyload alt="DreamFragment——实例感知的多物体 3D 场景生成">
+          <img src="/blog/img/dreamfragment_teaser.png" srcset="/blog/img/loading.gif" lazyload alt="DreamFragment——3D-Instance aware的多物体 3D 场景生成">
         </a>
       </div>
     
@@ -267,14 +234,14 @@
       <h2 class="index-header">
         
         <a href="/blog/2026/03/03/DreamFragment/" target="_self">
-          DreamFragment——实例感知的多物体 3D 场景生成
+          DreamFragment——3D-Instance aware的多物体 3D 场景生成
         </a>
       </h2>
 
       
       <a class="index-excerpt " href="/blog/2026/03/03/DreamFragment/" target="_self">
         <div>
-          论文主页：DreamFragment Project Page 这是我研一期间在实验室做的工作 DreamFragment，key challenge 是：如何从文字描述中生成多个物体相互交互的复杂 3D 场景，并且每个物体可以被单独分离出来。当物体之间有真实的接触和遮挡关系——比如「一只猫把前爪搭在桌子上」「宇航员穿着游泳圈」——当时的sota的方法（Hunyuan3D那些feed-forwa
+          论文主页：DreamFragment Project Page  这是我研一期间在实验室做的工作 DreamFragment，在这篇博客中，我先尽量用介绍paper的视角介绍一下我这篇工作都干了什么。而下一篇博客我将和大家介绍一下这篇工作幕后的design space和想法，我认为可能更加有趣和给人启发。 3D多物体生成的key challenge 是：如何从文字描述中生成多个物体相互交互的复杂
         </div>
       </a>
 
@@ -413,7 +380,7 @@
     
       <div class="col-12 col-md-4 m-auto index-img">
         <a href="/blog/2026/03/02/my_vavae/" target="_self">
-          <img src="/blog/new_pic/stage2.png" srcset="/blog/img/loading.gif" lazyload alt="视觉表征漫谈2——VAVAE，RAE类工作最佳solution">
+          <img src="/blog/new_pic/stage2.png" srcset="/blog/img/loading.gif" lazyload alt="视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation">
         </a>
       </div>
     
@@ -421,14 +388,14 @@
       <h2 class="index-header">
         
         <a href="/blog/2026/03/02/my_vavae/" target="_self">
-          视觉表征漫谈2——VAVAE，RAE类工作最佳solution
+          视觉表征漫谈2——VFM Tokenizer Design Space for Image Generation
         </a>
       </h2>
 
       
       <a class="index-excerpt " href="/blog/2026/03/02/my_vavae/" target="_self">
         <div>
-          上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。  这种解法我认为基本上是 DINOv4——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优雅的
+          上一次我们聊到了 VAVAE 和 RAE 类工作的困境，以及可能的解法。  这种解法可能是 DINOv4 探索的方案——一个在训练 VFM 的时候就能够良好保持住结构等信息的、模型参数量大的、数据更 diverse 的（比如见过很多字，这样高频信息的 gap 似乎有机会弥补），这样训练出来的 tokenizer 既保持了语义，又具备了很好的重建能力，但似乎是很久之后才会做到的事情。 有没有真的很优
         </div>
       </a>
 
