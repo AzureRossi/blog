@@ -289,9 +289,9 @@
 <p>很长时间以来，VFM 并没有对 2D 图像生成有着直接的冲击，更多的工作是将 VFM 以一种归纳偏置的形式引入生成 pipeline，帮助和优化结果生成，诸如 image editing 等等任务。事情的转变要从两个 2024–2025 年的工作说起。</p>
 <h3 id="VFM-与-VAE">VFM 与 VAE</h3>
 <p>潜在扩散模型（LDM<sup class="footnote-ref"><a href="#fn6" id="fnref6">[6]</a></sup>）在生成高保真图像的方面在近年来表现非常出色。然而，在 VAE 的设计中始终存在一种困境：为了增加 VAE 重建原图的<strong>重建能力</strong>，最 native 的方案是增加 VAE latent 中 channel 的数量，比如将经典的 SD-VAE<sup class="footnote-ref"><a href="#fn7" id="fnref7">[7]</a></sup> 的 4 channel 或者 8 channel 增加到 32 channel，势必会增加 VAE 的重建性能。但是增加 channel 带来的代价是巨大的，一方面，VAVAE 论文<sup class="footnote-ref"><a href="#fn1" id="fnref1:1">[1:1]</a></sup> 指出当增加 
-    <span id="mjx-6aba35b8">
+    <span id="mjx-d28acda8">
       <style>
-      #mjx-6aba35b8{
+      #mjx-d28acda8{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -450,9 +450,9 @@ g[data-mml-node="xypic"] path {
       <mjx-container class="MathJax" jax="SVG" style="position: relative;"><svg style="vertical-align: 0;" xmlns="http://www.w3.org/2000/svg" width="2.011ex" height="1.545ex" role="img" focusable="false" viewBox="0 -683 889 683" aria-hidden="true"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><path data-c="1D43E" d="M285 628Q285 635 228 637Q205 637 198 638T191 647Q191 649 193 661Q199 681 203 682Q205 683 214 683H219Q260 681 355 681Q389 681 418 681T463 682T483 682Q500 682 500 674Q500 669 497 660Q496 658 496 654T495 648T493 644T490 641T486 639T479 638T470 637T456 637Q416 636 405 634T387 623L306 305Q307 305 490 449T678 597Q692 611 692 620Q692 635 667 637Q651 637 651 648Q651 650 654 662T659 677Q662 682 676 682Q680 682 711 681T791 680Q814 680 839 681T869 682Q889 682 889 672Q889 650 881 642Q878 637 862 637Q787 632 726 586Q710 576 656 534T556 455L509 418L518 396Q527 374 546 329T581 244Q656 67 661 61Q663 59 666 57Q680 47 717 46H738Q744 38 744 37T741 19Q737 6 731 0H720Q680 3 625 3Q503 3 488 0H478Q472 6 472 9T474 27Q478 40 480 43T491 46H494Q544 46 544 71Q544 75 517 141T485 216L427 354L359 301L291 248L268 155Q245 63 245 58Q245 51 253 49T303 46H334Q340 37 340 35Q340 19 333 5Q328 0 317 0Q314 0 280 1T180 2Q118 2 85 2T49 1Q31 1 31 11Q31 13 34 25Q38 41 42 43T65 46Q92 46 125 49Q139 52 144 61Q147 65 216 339T285 628Z"></path></g></g></g></svg><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>K</mi></math></mjx-assistive-mml></mjx-container>
     </span>
    倍的 channel 时，LDM 达到对应的生成性能所需的数据量是**指数级（
-    <span id="mjx-58747a38">
+    <span id="mjx-b5b0e918">
       <style>
-      #mjx-58747a38{
+      #mjx-b5b0e918{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -663,9 +663,9 @@ $$
 <li>DINOv2 提取图像的语义特征（冻结，不动）</li>
 <li>一个轻量级的 <strong>Mapper（可训练）</strong> 将 DINOv2 特征映射到和 VAE latent 同空间的 Dino Offset</li>
 <li>
-    <span id="mjx-0cc75e3">
+    <span id="mjx-01de7968">
       <style>
-      #mjx-0cc75e3{
+      #mjx-01de7968{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -900,9 +900,9 @@ g[data-mml-node="xypic"] path {
 <p>所以，直接用 VFM 做 tokenizer 的困境是：<strong>语义太多，细节太少</strong>——这恰好和 VAE tokenizer 的问题相反（VAE：细节太多，语义太少）。</p>
 <p>这里还有一个不那么明显但很关键的工程问题。RAE<sup class="footnote-ref"><a href="#fn11" id="fnref11">[11]</a></sup> 论文（2510.11690）给出了一个严格的理论证明：当 DiT 的宽度（hidden dimension）小于 token 的 channel 维度时，flow matching loss 存在一个<strong>与数据分布无关的正下界</strong>：</p>
 
-    <span id="mjx-fb71464">
+    <span id="mjx-f94c94e">
       <style>
-      #mjx-fb71464{
+      #mjx-f94c94e{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -1070,9 +1070,9 @@ g[data-mml-node="xypic"] path {
 <p><img src="../../../../pic/1461772792777_.pic.jpg" srcset="/blog/img/loading.gif" lazyload alt="SVG 架构：DINO + Residual Encoder（同期工作）"></p>
 <p>SVG（LDM without Variational Autoencoder，2510.15301）是来自清华自动化的工作，<strong>完全抛弃 VAE</strong>——用 DINOv3 特征加上一个 <strong>Residual Encoder</strong> 来构建新的 latent space：</p>
 
-    <span id="mjx-10fbe938">
+    <span id="mjx-30c42438">
       <style>
-      #mjx-10fbe938{
+      #mjx-30c42438{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -1232,9 +1232,9 @@ g[data-mml-node="xypic"] path {
     </span>
   <p>Residual Encoder 专门负责补充 DINO 特征里缺失的颜色和细粒度感知细节，两路特征在 channel 维度上直接 concat。为了防止 Residual Encoder 的输出破坏 DINO 原有的语义分布，SVG 对残差特征做 batch-statistics 级别的对齐（Distribution Alignment）：</p>
 
-    <span id="mjx-fdd898">
+    <span id="mjx-10bd08a8">
       <style>
-      #mjx-fdd898{
+      #mjx-10bd08a8{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;

@@ -297,9 +297,9 @@
 <h3 id="DINO-的语义是否可以被-藏-进VAE-latent中？">DINO 的语义是否可以被&quot;藏&quot;进VAE latent中？</h3>
 <p>SVG<sup class="footnote-ref"><a href="#fn5" id="fnref5">[5]</a></sup> 和 RAE<sup class="footnote-ref"><a href="#fn6" id="fnref6">[6]</a></sup> 给出的方案，本质上都是重建和生成的trade-off——要么拼接 DINO 特征，要么直接替换 VAE。这两种方式都不可避免地改变了 latent 的维度和分布，下游的 DiT 必须针对新 latent 从头训练，已有的 SD 生态也很难复用。此外，现在的方案如果语义有大幅提升，重建性能必然大幅缩水；反之亦然。</p>
 <p>但如果借鉴 LayerDiffuse 的思路，问题就可以换一种方式提出：能否学到一个轻量的映射 
-    <span id="mjx-6b0bc848">
+    <span id="mjx-db87fd78">
       <style>
-      #mjx-6b0bc848{
+      #mjx-db87fd78{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -459,9 +459,9 @@ g[data-mml-node="xypic"] path {
     </span>
   ，把 DINO 的语义以 offset 的形式&quot;写入&quot; VAE latent，使得修正后的 latent 在统计分布上和原始 latent 无异，但实际上携带了更丰富的语义结构，甚至语义含量与VFM本身无异？</p>
 
-    <span id="mjx-4dcdf8d8">
+    <span id="mjx-a3900ca8">
       <style>
-      #mjx-4dcdf8d8{
+      #mjx-a3900ca8{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -624,9 +624,9 @@ g[data-mml-node="xypic"] path {
 <h3 id="理论上为什么这件事可能是对的？">理论上为什么这件事可能是对的？</h3>
 <p>LayerDiffuse<sup class="footnote-ref"><a href="#fn3" id="fnref3:2">[3:2]</a></sup> 的分布对齐约束提供了一个直接可用的ref – 把 offset 的均值和方差强制对齐到原始 latent 的统计量上：</p>
 
-    <span id="mjx-709d4b58">
+    <span id="mjx-2e470678">
       <style>
-      #mjx-709d4b58{
+      #mjx-2e470678{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -788,9 +788,9 @@ g[data-mml-node="xypic"] path {
 <h3 id="A-future-design-space-to-be-continued…">A future design space to be continued…</h3>
 <p>这个方向我在实习后期花了相当长的时间尝试，最终没有训出一个收敛的版本。</p>
 <p>实验时，最核心的难点是 offset 幅度的控制和如何让decoder感知到这个微小的
-    <span id="mjx-9291eda8">
+    <span id="mjx-330b4f3">
       <style>
-      #mjx-9291eda8{
+      #mjx-330b4f3{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -949,9 +949,9 @@ g[data-mml-node="xypic"] path {
       <mjx-container class="MathJax" jax="SVG" style="position: relative;"><svg style="vertical-align: -0.025ex;" xmlns="http://www.w3.org/2000/svg" width="2.937ex" height="1.645ex" role="img" focusable="false" viewBox="0 -716 1298 727" aria-hidden="true"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><path data-c="394" d="M51 0Q46 4 46 7Q46 9 215 357T388 709Q391 716 416 716Q439 716 444 709Q447 705 616 357T786 7Q786 4 781 0H51ZM507 344L384 596L137 92L383 91H630Q630 93 507 344Z"></path></g><g data-mml-node="mi" transform="translate(833,0)"><path data-c="1D467" d="M347 338Q337 338 294 349T231 360Q211 360 197 356T174 346T162 335T155 324L153 320Q150 317 138 317Q117 317 117 325Q117 330 120 339Q133 378 163 406T229 440Q241 442 246 442Q271 442 291 425T329 392T367 375Q389 375 411 408T434 441Q435 442 449 442H462Q468 436 468 434Q468 430 463 420T449 399T432 377T418 358L411 349Q368 298 275 214T160 106L148 94L163 93Q185 93 227 82T290 71Q328 71 360 90T402 140Q406 149 409 151T424 153Q443 153 443 143Q443 138 442 134Q425 72 376 31T278 -11Q252 -11 232 6T193 40T155 57Q111 57 76 -3Q70 -11 59 -11H54H41Q35 -5 35 -2Q35 13 93 84Q132 129 225 214T340 322Q352 338 347 338Z"></path></g></g></g></svg><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi mathvariant="normal">Δ</mi><mi>z</mi></math></mjx-assistive-mml></mjx-container>
     </span>
   。
-    <span id="mjx-ff7e8618">
+    <span id="mjx-ef6ec79">
       <style>
-      #mjx-ff7e8618{
+      #mjx-ef6ec79{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
@@ -1110,9 +1110,9 @@ g[data-mml-node="xypic"] path {
       <mjx-container class="MathJax" jax="SVG" style="position: relative;"><svg style="vertical-align: -0.025ex;" xmlns="http://www.w3.org/2000/svg" width="2.937ex" height="1.645ex" role="img" focusable="false" viewBox="0 -716 1298 727" aria-hidden="true"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><path data-c="394" d="M51 0Q46 4 46 7Q46 9 215 357T388 709Q391 716 416 716Q439 716 444 709Q447 705 616 357T786 7Q786 4 781 0H51ZM507 344L384 596L137 92L383 91H630Q630 93 507 344Z"></path></g><g data-mml-node="mi" transform="translate(833,0)"><path data-c="1D467" d="M347 338Q337 338 294 349T231 360Q211 360 197 356T174 346T162 335T155 324L153 320Q150 317 138 317Q117 317 117 325Q117 330 120 339Q133 378 163 406T229 440Q241 442 246 442Q271 442 291 425T329 392T367 375Q389 375 411 408T434 441Q435 442 449 442H462Q468 436 468 434Q468 430 463 420T449 399T432 377T418 358L411 349Q368 298 275 214T160 106L148 94L163 93Q185 93 227 82T290 71Q328 71 360 90T402 140Q406 149 409 151T424 153Q443 153 443 143Q443 138 442 134Q425 72 376 31T278 -11Q252 -11 232 6T193 40T155 57Q111 57 76 -3Q70 -11 59 -11H54H41Q35 -5 35 -2Q35 13 93 84Q132 129 225 214T340 322Q352 338 347 338Z"></path></g></g></g></svg><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi mathvariant="normal">Δ</mi><mi>z</mi></math></mjx-assistive-mml></mjx-container>
     </span>
    太小，语义信息实际上没有被有效写入，DiT 感知不到任何差异；太大，latent 的分布就会发生漂移，重建质量和 DiT 兼容性同时下降。这个工作点的调节极其敏感，而且会随着训练动态漂移，没有找到稳定的解。其次是多目标 loss 的梯度冲突——分布对齐、语义对齐、重建三路 loss 同时优化时，梯度方向经常相互抵消，训练曲线极不稳定，很难判断模型究竟在往哪个方向收敛。此外，如何让decoder感知到这个微小的
-    <span id="mjx-3c392ef8">
+    <span id="mjx-21b22988">
       <style>
-      #mjx-3c392ef8{
+      #mjx-21b22988{
         display:contents;
         mjx-assistive-mml {
           user-select: text !important;
