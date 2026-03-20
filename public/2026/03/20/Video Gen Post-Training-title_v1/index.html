@@ -1,0 +1,1189 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/blog/img/head.png">
+  <link rel="icon" href="/blog/img/head.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yang Zihao">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Video Gen Post-Training 选题分析 按照研究方法论中的选题步骤：精确化 failure case → 判断 well-established solution 归属（4种情况）→ 确定技术挑战 → 选题决策。  选题判断框架（来自方法论）    情况 描述 建议     情况1 相同I&#x2F;O任务，已有不错解决方案，只是有些地方还不够好 必须换题   情况2 I&#x2F;O变化&#x2F;多个不同">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Video Gen Post-Training 选题分析">
+<meta property="og:url" content="https://azurerossi.github.io/blog/2026/03/20/Video%20Gen%20Post-Training-title_v1/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Video Gen Post-Training 选题分析 按照研究方法论中的选题步骤：精确化 failure case → 判断 well-established solution 归属（4种情况）→ 确定技术挑战 → 选题决策。  选题判断框架（来自方法论）    情况 描述 建议     情况1 相同I&#x2F;O任务，已有不错解决方案，只是有些地方还不够好 必须换题   情况2 I&#x2F;O变化&#x2F;多个不同">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://azurerossi.github.io/blog/img/Video%20gen%20post-training.png">
+<meta property="article:published_time" content="2026-03-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-20T11:38:19.968Z">
+<meta property="article:author" content="Yang Zihao">
+<meta property="article:tag" content="生成模型">
+<meta property="article:tag" content="Diffusion">
+<meta property="article:tag" content="Transformer">
+<meta property="article:tag" content="Video Generation">
+<meta property="article:tag" content="Post-Training">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://azurerossi.github.io/blog/img/Video%20gen%20post-training.png">
+  
+  
+  
+  <title>Video Gen Post-Training 选题分析 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/blog/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/blog/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/blog/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"azurerossi.github.io","root":"/blog/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/blog/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/blog/js/utils.js" ></script>
+  <script  src="/blog/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/blog/">
+      <strong>YZH&#39;Home</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/blog/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/blog/img/default_1.gif') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Video Gen Post-Training 选题分析"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-03-20 00:00" pubdate>
+          2026年3月20日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          7 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Video Gen Post-Training 选题分析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1>Video Gen Post-Training 选题分析</h1>
+<p>按照研究方法论中的选题步骤：精确化 failure case → 判断 well-established solution 归属（4种情况）→ 确定技术挑战 → 选题决策。</p>
+<hr>
+<h2 id="选题判断框架（来自方法论）">选题判断框架（来自方法论）</h2>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>描述</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>情况1</td>
+<td>相同I/O任务，已有不错解决方案，只是有些地方还不够好</td>
+<td><strong>必须换题</strong></td>
+</tr>
+<tr>
+<td>情况2</td>
+<td>I/O变化/多个不同域，都有不错的类似解决方案</td>
+<td><strong>必须换题</strong></td>
+</tr>
+<tr>
+<td>情况3</td>
+<td>只有少数1-2个完全不同域有不错的类似解决方案</td>
+<td>适合新手做</td>
+</tr>
+<tr>
+<td>情况4</td>
+<td>各个不同领域都没有较好的解决方案</td>
+<td>适合高手做</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="Gap-B-分析：复杂多步骤因果链物理">Gap B 分析：复杂多步骤因果链物理</h2>
+<h3 id="Failure-Case（精确化）">Failure Case（精确化）</h3>
+<p><strong>任务设定</strong>：Text-to-Video，prompt 中包含多步物理因果链</p>
+<p><strong>具体 failure case</strong>：</p>
+<ul>
+<li>Prompt：<em>“A ball rolls down a ramp and hits a domino, which falls and knocks over a cup of water”</em></li>
+<li>失败模式1：球碰到多米诺时，多米诺没有物理反应（因果链断裂）</li>
+<li>失败模式2：多米诺倒了，但没有和杯子交互（中间环节断裂）</li>
+<li>失败模式3：每个单独时刻的物理是对的（球在滚/多米诺在倒/杯子在倒），但前后缺乏因果连接</li>
+</ul>
+<p><strong>与已有工作的本质区别</strong>：</p>
+<ul>
+<li>PhysMaster/PhysCorr/PhyGDPO 解决的是：<strong>单个对象在单一时刻的物理合理性</strong>（球落地时的轨迹对不对）</li>
+<li>本 failure case 要求：<strong>步骤A的结果是步骤B发生的物理原因</strong>（因果性，而非单步合理性）</li>
+</ul>
+<h3 id="Well-established-Solution-判断">Well-established Solution 判断</h3>
+<table>
+<thead>
+<tr>
+<th>领域</th>
+<th>是否有类似解决方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Video gen post-training</td>
+<td>❌</td>
+<td>当前所有物理对齐工作仅处理单对象/单时刻，无因果链</td>
+</tr>
+<tr>
+<td>物理模拟引擎</td>
+<td>✅ 但不适用</td>
+<td>Physics engine 可模拟因果，但不是生成模型，无法直接迁移</td>
+</tr>
+<tr>
+<td>机器人/具身AI</td>
+<td>⚠️ 部分</td>
+<td>有因果场景理解，但未用于生成模型后训练</td>
+</tr>
+<tr>
+<td>视频理解</td>
+<td>⚠️ 部分</td>
+<td>因果事件关系推理（视频问答），但没有作为reward用于生成</td>
+</tr>
+<tr>
+<td>图像/LLM</td>
+<td>❌</td>
+<td>无时序因果维度</td>
+</tr>
+</tbody>
+</table>
+<p><strong>判断：情况4</strong> — 各个不同领域的生成模型中，都没有针对多步骤物理因果链的后训练解决方案。</p>
+<h3 id="技术挑战">技术挑战</h3>
+<ol>
+<li><strong>Reward 设计极难</strong>：如何衡量&quot;A 导致了 B&quot;而不是&quot;A 和 B 各自合理&quot;？需要因果关系度量，而非独立物理度量。</li>
+<li><strong>标注困难</strong>：人工标注因果链正确性非常专业，VLM 对复杂物理因果推理能力有限。</li>
+<li><strong>数据稀缺</strong>：包含多步骤物理因果链的真实视频数量有限。</li>
+</ol>
+<h3 id="选题决策：可以做，但适合高手">选题决策：<strong>可以做，但适合高手</strong></h3>
+<p><strong>风险极高，但影响力极大</strong>。适合已有深厚物理推理/reward design 积累的研究者。<br>
+不建议作为第一个项目，除非有明确的reward设计突破口。</p>
+<hr>
+<h2 id="Gap-C-分析：时序语义细粒度对齐">Gap C 分析：时序语义细粒度对齐</h2>
+<h3 id="Failure-Case（精确化）-2">Failure Case（精确化）</h3>
+<p><strong>任务设定</strong>：Text-to-Video，prompt 中包含明确的时序语义结构（顺序动作/并发事件）</p>
+<p><strong>具体 failure case</strong>：</p>
+<p><strong>Case C1：动作顺序错误</strong></p>
+<ul>
+<li>Prompt：<em>“First, a person opens a door. Then, they walk through it. Finally, they sit down at a desk.”</em></li>
+<li>失败模式：视频中人物直接坐下（最后动作先发生），开门动作出现在末尾或缺失</li>
+</ul>
+<p><strong>Case C2：动作重叠/遗漏</strong></p>
+<ul>
+<li>Prompt：<em>“The chef first chops vegetables, then stirs them in the pan, and finally plates the dish.”</em></li>
+<li>失败模式：切菜和翻炒同时进行（时序边界不清）；或&quot;摆盘&quot;动作完全缺失</li>
+</ul>
+<p><strong>Case C3：时序结构丢失</strong></p>
+<ul>
+<li>Prompt 中有 “while A, B happens” 的并发时序</li>
+<li>失败模式：A 和 B 被顺序生成而非并发，视频时序结构完全不符合 prompt 语义</li>
+</ul>
+<p><strong>与已有工作的本质区别</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>已有工作</th>
+<th>解决的是</th>
+<th>不解决的是</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VideoDPO</td>
+<td>全局 CLIP 语义相似度（视频整体和 prompt 相关不相关）</td>
+<td>时序内部的语义结构</td>
+</tr>
+<tr>
+<td>DenseDPO</td>
+<td>时序段的视觉运动质量（流畅度、artifact）</td>
+<td>这段时间里&quot;发生了什么语义动作&quot;</td>
+</tr>
+<tr>
+<td>LocalDPO</td>
+<td>时空区域的视觉细节质量</td>
+<td>语义动作的时序顺序</td>
+</tr>
+<tr>
+<td>RealDPO</td>
+<td>动作的自然流畅性（motion realism）</td>
+<td>多步骤动作的时序语义正确性</td>
+</tr>
+</tbody>
+</table>
+<p><strong>核心技术问题</strong>：如何构建能够捕获「动作时序语义正确性」的偏好对？</p>
+<h3 id="Well-established-Solution-判断-2">Well-established Solution 判断</h3>
+<table>
+<thead>
+<tr>
+<th>领域</th>
+<th>是否有类似解决方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Video gen post-training</td>
+<td>❌</td>
+<td>DenseDPO 时序段 = 运动质量；无人做时序语义</td>
+</tr>
+<tr>
+<td>视频理解/时序动作识别</td>
+<td>✅ 部分可迁移</td>
+<td>Temporal action segmentation（THUMOS/ActivityNet 等）可以识别&quot;何时发生了什么动作&quot;</td>
+</tr>
+<tr>
+<td>LLM 时序推理</td>
+<td>✅ 文本域</td>
+<td>Chain-of-thought 可以做时序语义推理，但不是视觉</td>
+</tr>
+<tr>
+<td>图像生成对齐</td>
+<td>⚠️ 弱相关</td>
+<td>LocalDPO 做了空间语义区域，但无时序</td>
+</tr>
+<tr>
+<td>T2I compositional</td>
+<td>⚠️ 弱相关</td>
+<td>Attend-and-Excite 等做了空间组合，无时序</td>
+</tr>
+</tbody>
+</table>
+<p><strong>判断：情况3</strong> — 视频理解领域有时序动作识别的技术基础，但没有将其作为生成模型后训练 reward 的工作；与之相近的域（LLM 的时序推理）也仅在文本域成熟，视觉域无对应。</p>
+<h3 id="✅-Failure-Case-真实性验证（Benchmark-定量证据）">✅ Failure Case 真实性验证（Benchmark 定量证据）</h3>
+<p><strong>强有力证据</strong>（搜索确认）：</p>
+<p><strong>TC-Bench</strong> (2406.08656, ACL Findings 2025)：</p>
+<ul>
+<li>专门测试 T2V 模型的 Temporal Compositionality（时序组合性）</li>
+<li>测试类别：<strong>属性渐变</strong>（A→B状态转变）、<strong>物体关系变化</strong>、<strong>背景切换</strong></li>
+<li>关键结论：<strong>“most video generators achieve less than 20% of the compositional changes”</strong></li>
+<li>这是对 Sora、Gen-2 等 SOTA 模型的测试结果，说明失败率 &gt;80%</li>
+</ul>
+<p><strong>T2V-CompBench</strong> (2407.14505, CVPR 2025)：</p>
+<ul>
+<li>测试类别包括：<strong>consistent attribute binding, dynamic attribute binding, spatial relationships, motion binding, action binding, object interactions</strong></li>
+<li>关键结论：“compositional text-to-video generation is <strong>highly challenging</strong> for current models”</li>
+<li>VideoDPO 论文本身也承认：“such as those for <strong>compositional video generation</strong>” 是尚未解决的挑战</li>
+</ul>
+<p><strong>TemporalBench</strong> (2410.10818)：</p>
+<ul>
+<li>测试 VideoLLM 的时序理解（包括 event order 评估）</li>
+<li>关键结论：<strong>GPT-4o 只达到 38.5% accuracy</strong>，humans 约 70%，gap 约 30%——说明即使理解模型也有严重的时序推理缺陷，生成模型只会更差</li>
+</ul>
+<p><strong>后训练领域的空白验证</strong>：</p>
+<ul>
+<li>专门搜索&quot;video generation post-training temporal compositionality sequential actions DPO GRPO&quot;→ <strong>零命中</strong></li>
+<li>“Temporal Preference Optimization for Long-Form Video Understanding” (2501.13919) 是 VideoLLM 的理解优化，非视频生成后训练</li>
+</ul>
+<p><strong>结论：Failure case 真实且重要，无对应生成后训练工作，确认为开放问题。</strong></p>
+<h3 id="TC-Bench-vs-Gap-C-的关系（重要细化）">TC-Bench vs Gap C 的关系（重要细化）</h3>
+<p>TC-Bench 测试的是 <strong>2-state 转变</strong>（初始状态 → 结束状态），如&quot;球从红色变蓝色&quot;。<br>
+Gap C 目标的是 <strong>N-step 顺序动作</strong>（A → B → C），如&quot;先开门，再走进去，最后坐下&quot;。</p>
+<p>TC-Bench 是 Gap C 的 <strong>子集</strong>（最简单的 N=2 情况）且 &lt;20% 成功率——意味着更复杂的 N≥3 情况更差，问题更严峻。</p>
+<h3 id="技术挑战（真实的，不是trivia）">技术挑战（真实的，不是trivia）</h3>
+<p><strong>挑战1：偏好对构建方法</strong></p>
+<ul>
+<li>DenseDPO 用 corrupted GT 视频构建 pairs（motion bias 中立）</li>
+<li>时序语义对 pair 如何构建？两个视频必须&quot;内容相似但顺序不同&quot;</li>
+<li>方案A：生成多个 candidate，用 VLM 评估哪个时序语义更正确（成本高）</li>
+<li>方案B：通过时序打乱（temporal shuffling）构造负样本（技术上有难点：如何保持视觉质量的同时改变语义顺序？）</li>
+<li>方案C：将正确顺序视频的帧重排成错误顺序作为负样本（简单但不现实）</li>
+</ul>
+<p><strong>挑战2：Reward/Annotation 设计</strong></p>
+<ul>
+<li>VLM 对复杂时序指令的判断精度如何保证？</li>
+<li>专门的 temporal semantic reward model 是否需要？</li>
+<li>如何区分&quot;动作顺序对但过渡不自然&quot;vs&quot;动作顺序错误&quot;？</li>
+</ul>
+<p><strong>挑战3：训练信号精度</strong></p>
+<ul>
+<li>如果只做视频级别的时序语义 reward，信号太稀疏</li>
+<li>需要段级别（segment-level）的时序语义 annotation → 与 DenseDPO 的时序段设计结合</li>
+</ul>
+<h3 id="与已有工作的创新性组合">与已有工作的创新性组合</h3>
+<p><strong>可以创新性组合的技术</strong>：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs markdown">DenseDPO（时序段切分）<br><span class="hljs-bullet">    +</span><br>VLM 时序语义判断（GPT-4V / VideoLLM：动作时序是否正确？）<br><span class="hljs-bullet">    +</span><br>Flow-GRPO / DanceGRPO 的在线 RL 框架<br><span class="hljs-code">    = 时序语义细粒度对齐（本课题）</span><br></code></pre></td></tr></table></figure>
+<p><strong>组合的创新性</strong>：</p>
+<ul>
+<li>不是 A → intermediate → B 的简单拼接</li>
+<li>DenseDPO 的段切分原本服务于「运动质量」，现在用于「语义动作分段」——两者的偏好对构建方式完全不同（DenseDPO 用 corrupted GT，本课题需要语义重排构建）</li>
+<li>VLM 在 DenseDPO 中仅做运动质量标注，本课题做语义顺序判断——信号维度完全不同</li>
+</ul>
+<h3 id="选题决策：推荐，情况3，适合执行">选题决策：<strong>推荐，情况3，适合执行</strong></h3>
+<p>✅ <strong>Failure case 清晰，无直接竞争者，技术挑战真实但可攻克（有 DenseDPO 模板 + VLM 工具可用）</strong><br>
+<strong>Novelty 类别：2类（novel pipeline）</strong><br>
+核心贡献：首个专门针对时序语义指令遵循的视频生成后训练框架</p>
+<hr>
+<h2 id="Gap-D-分析：去噪轨迹-×-视频帧-二维-Credit-Assignment">Gap D 分析：去噪轨迹 × 视频帧 二维 Credit Assignment</h2>
+<h3 id="Failure-Case（精确化）-3">Failure Case（精确化）</h3>
+<p><strong>问题</strong>：在 GRPO 训练中，所有去噪步骤均等地更新参数，但实际上：</p>
+<ul>
+<li><strong>早期去噪步骤（高噪声 t≈T）</strong>：决定视频的全局结构（动作类型、主体位置）</li>
+<li><strong>晚期去噪步骤（低噪声 t≈0）</strong>：决定视觉细节（纹理、色彩、边缘）</li>
+</ul>
+<p><strong>失败模式</strong>：</p>
+<ul>
+<li>模型通过优化容易的晚期步骤来提高 reward（reward hacking on easy steps）</li>
+<li>早期去噪步骤的结构性错误（动作不正确）未被有效纠正</li>
+<li>同一 reward 信号在帧维度也是均等的，但某些关键帧（动作转折点）比背景帧更重要</li>
+</ul>
+<h3 id="Well-established-Solution-判断-3">Well-established Solution 判断</h3>
+<table>
+<thead>
+<tr>
+<th>领域</th>
+<th>是否有类似解决方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T2I 去噪步级 credit</td>
+<td>✅</td>
+<td>Step-level Reward for Free (2505.19196) 用 cosine 相似度量化每步贡献</td>
+</tr>
+<tr>
+<td>Video latent process reward</td>
+<td>✅</td>
+<td>PRFL (2511.21541) 在 latent 空间全链路 reward（但帧维度均等）</td>
+</tr>
+<tr>
+<td>Consistent Noisy Latent Rewards</td>
+<td>✅</td>
+<td>轨迹偏好优化（本方向已有开拓性工作）</td>
+</tr>
+<tr>
+<td>Video 帧级别 reward</td>
+<td>⚠️ 部分</td>
+<td>DenseDPO 做了时序段的视觉 reward，但不在去噪轨迹维度</td>
+</tr>
+</tbody>
+</table>
+<p><strong>判断：情况2</strong> — T2I 去噪步级已有完善方案；Video 的「去噪步骤 × 视频帧」二维联合 credit 是扩展，但技术路径过于清晰（T2I 方案 + DenseDPO 时序段 → 结合即可）。</p>
+<p><strong>选题决策：不推荐作为主课题</strong>（情况2）</p>
+<p>技术挑战真实，但属于对已有方案的组合扩展，novelty 较弱（最多 3-4 类）。<br>
+可以作为更大方向中的一个技术模块，而不是主要贡献。</p>
+<hr>
+<h2 id="Gap-E-分析：通用跨域视频-Reward-Model">Gap E 分析：通用跨域视频 Reward Model</h2>
+<h3 id="Failure-Case（精确化）-4">Failure Case（精确化）</h3>
+<p>当前 reward model 格局：</p>
+<ul>
+<li>物理专用：PhysicsRM, SoliReward（物理域）</li>
+<li>身份专用：Identity reward model（人体一致性）</li>
+<li>运动专用：RealDPO（运动真实性）</li>
+<li><strong>没有</strong>覆盖所有维度的通用视频 reward model</li>
+</ul>
+<p><strong>失败模式</strong>：训练一个视频生成器需要同时优化物理+身份+运动+语义，但目前只能单独优化各维度，多目标组合时各 reward 相互干扰。</p>
+<h3 id="Well-established-Solution-判断-4">Well-established Solution 判断</h3>
+<table>
+<thead>
+<tr>
+<th>领域</th>
+<th>是否有类似解决方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>图像通用 reward</td>
+<td>✅</td>
+<td>ImageReward, PickScore, HPS-v2 都是通用图像 reward model</td>
+</tr>
+<tr>
+<td>Video 质量评测</td>
+<td>✅ 部分</td>
+<td>VBench/EvalCrafter 多维度，但不是 RL reward 格式</td>
+</tr>
+<tr>
+<td>VLM as reward</td>
+<td>✅</td>
+<td>Diffusion-DRF 用冻结 VLM，但不是专用 reward model</td>
+</tr>
+</tbody>
+</table>
+<p><strong>判断：情况2</strong> — 图像域的通用 reward model 路线已经成熟，视频域是明确的迁移问题，技术路径清晰。</p>
+<p><strong>选题决策：不推荐</strong>（情况2）</p>
+<hr>
+<h2 id="Gap-F-分析（新识别）：复杂空间-时序组合指令遵循">Gap F 分析（新识别）：复杂空间+时序组合指令遵循</h2>
+<h3 id="Failure-Case（精确化）-5">Failure Case（精确化）</h3>
+<p><strong>Case F1：空间+时序双重组合</strong></p>
+<ul>
+<li>Prompt：<em>“A red car is on the left lane, while a blue bus overtakes it from the right. Then the bus turns right at the intersection.”</em></li>
+<li>失败模式：空间关系错误（bus 在 left），时序错误（转弯先于超车），或两者都错</li>
+</ul>
+<p><strong>Case F2：多主体并发空间动态</strong></p>
+<ul>
+<li>Prompt：<em>“While person A on the left sits down, person B on the right stands up simultaneously.”</em></li>
+<li>失败模式：A 和 B 动作同步但空间位置互换，或顺序发生而非并发</li>
+</ul>
+<h3 id="Well-established-Solution-判断-5">Well-established Solution 判断</h3>
+<table>
+<thead>
+<tr>
+<th>领域</th>
+<th>是否有类似解决方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>图像空间组合生成</td>
+<td>✅ 部分</td>
+<td>Attend-and-Excite, T2I-CompBench（空间组合）</td>
+</tr>
+<tr>
+<td>视频时序语义</td>
+<td>❌</td>
+<td>同 Gap C，视频后训练中无时序语义对齐</td>
+</tr>
+<tr>
+<td>空间+时序联合</td>
+<td>❌</td>
+<td>无论哪个领域都没有同时处理空间和时序约束的生成后训练</td>
+</tr>
+</tbody>
+</table>
+<p><strong>判断：情况3</strong> — 图像域有空间组合（部分方案），视频时序语义无对应，空间+时序联合无任何领域解法。</p>
+<p><strong>与 Gap C 的关系</strong>：Gap F 是 Gap C 的扩展（增加了空间维度）。Gap C 只要求时序顺序正确，Gap F 还要求空间位置正确且空间+时序约束联合满足。</p>
+<p><strong>选题决策：可以做，比 Gap C 更难但更高影响力</strong></p>
+<p>若要做，建议先解决 Gap C（纯时序语义），再扩展到 Gap F（空间+时序）。Gap F 可以是 Gap C 项目的第二阶段。</p>
+<hr>
+<h2 id="最终选题决策">最终选题决策</h2>
+<h3 id="汇总表">汇总表</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>判断情况</th>
+<th>Novelty</th>
+<th>难度</th>
+<th>决策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B：多步骤因果链物理</td>
+<td>情况4</td>
+<td>极高</td>
+<td>极难（reward设计无解法）</td>
+<td>⚠️ 高手专项</td>
+</tr>
+<tr>
+<td><strong>C：时序语义细粒度对齐</strong></td>
+<td><strong>情况3</strong></td>
+<td><strong>高</strong></td>
+<td><strong>中等</strong></td>
+<td><strong>✅ 首选</strong></td>
+</tr>
+<tr>
+<td>D：二维 Credit Assignment</td>
+<td>情况2</td>
+<td>中</td>
+<td>中</td>
+<td>❌ 不独立推荐</td>
+</tr>
+<tr>
+<td>E：通用 reward model</td>
+<td>情况2</td>
+<td>低</td>
+<td>中</td>
+<td>❌ 不推荐</td>
+</tr>
+<tr>
+<td>F：空间+时序组合指令</td>
+<td>情况3</td>
+<td>很高</td>
+<td>中高</td>
+<td>✅ Gap C 的扩展</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="✅-推荐研究课题：时序语义细粒度对齐（Temporal-Semantic-Fine-grained-Alignment）">✅ 推荐研究课题：时序语义细粒度对齐（Temporal Semantic Fine-grained Alignment）</h3>
+<p><strong>研究问题</strong>：<br>
+如何使文本到视频生成模型在后训练阶段，更准确地遵循 prompt 中的时序语义结构（动作顺序、并发关系、时间边界）？</p>
+<p><strong>核心 Failure Case</strong>：</p>
+<ul>
+<li>现有模型（含 VideoDPO/DenseDPO 后训练）生成的视频忽视 prompt 中&quot;first…then…finally…&quot;或&quot;while A, B&quot;等时序语义结构，产生动作顺序错误、动作遗漏、或时序边界不清的视频。</li>
+</ul>
+<p><strong>技术挑战（真实的）</strong>：</p>
+<ol>
+<li><strong>偏好对构建</strong>：如何高效构建「时序语义正确 vs 时序语义错误」的视频偏好对？</li>
+<li><strong>Reward 设计</strong>：如何用 VLM 或专用模型评估段级别的时序语义正确性？</li>
+<li><strong>训练目标</strong>：需要段级别的时序语义信号（不能只有 video-level reward），如何与 DPO/GRPO 框架结合？</li>
+</ol>
+<p><strong>Novelty 类别</strong>：<strong>2类 novelty（novel pipeline）</strong></p>
+<p><strong>与已有技术的创新组合</strong>：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs css">时序段切分（来自 DenseDPO）<br>    + 语义动作识别/VLM 时序判断（来自视频理解领域）<br>    + DPO/<span class="hljs-attribute">Flow</span>-GRPO 框架（来自 VideoDPO/<span class="hljs-attribute">Flow</span>-GRPO）<br>    ↓<br>Temporal Semantic DPO（TempoSemanticDPO 或类似命名）<br></code></pre></td></tr></table></figure>
+<p><strong>差异化论证</strong>（为什么不是简单组合）：</p>
+<ul>
+<li>DenseDPO 的段切分是为「视觉运动质量」设计的（corrupted GT pairs），本工作需要为「语义顺序正确性」设计全新的 pair 构建策略</li>
+<li>VLM 在 DenseDPO 中做运动 artifact 判断，本工作做「动作时序语义判断」——信号性质完全不同</li>
+<li>两者组合不能直接拼接（组合需要创新：如何用时序打乱/语义替换来构建负样本，而不是 corrupted GT）</li>
+</ul>
+<hr>
+<h3 id="备选课题：Gap-B（多步骤因果链物理）">备选课题：Gap B（多步骤因果链物理）</h3>
+<p>若有以下条件，可以选 Gap B：</p>
+<ol>
+<li>有物理仿真工具（如 Isaac Sim）可以生成因果链的 ground truth</li>
+<li>有 VLM/专用模型评估因果连接性的工具（或愿意自己训练）</li>
+<li>接受高风险高回报的研究路径</li>
+</ol>
+<hr>
+<h2 id="下一步：解题阶段">下一步：解题阶段</h2>
+<p>选定 <strong>Gap C（时序语义细粒度对齐）</strong> 后，下一步按方法论进入解题阶段：</p>
+<ol>
+<li><strong>列出所有可能的 pipeline 方案</strong>（challenge-insight tree 中相关技术的组合）</li>
+<li><strong>逐一分析各 pipeline 的优劣势</strong></li>
+<li><strong>选择一个 pipeline</strong> 进行深入设计</li>
+<li><strong>设计实验验证计划</strong>：baseline 模型、评测指标（如何评测时序语义对齐？需要新 benchmark）</li>
+</ol>
+<hr>
+<p><em>文档创建时间：基于 Literature Tree 和 Challenge-Insight Tree 的分析</em></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/blog/categories/%E5%8D%9A%E5%A3%AB%E7%A7%91%E7%A0%94/" class="category-chain-item">博士科研</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/blog/tags/%E7%94%9F%E6%88%90%E6%A8%A1%E5%9E%8B/" class="print-no-link">#生成模型</a>
+      
+        <a href="/blog/tags/Diffusion/" class="print-no-link">#Diffusion</a>
+      
+        <a href="/blog/tags/Transformer/" class="print-no-link">#Transformer</a>
+      
+        <a href="/blog/tags/Video-Generation/" class="print-no-link">#Video Generation</a>
+      
+        <a href="/blog/tags/Post-Training/" class="print-no-link">#Post-Training</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Video Gen Post-Training 选题分析</div>
+      <div>https://azurerossi.github.io/blog/2026/03/20/Video Gen Post-Training-title_v1/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yang Zihao</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年3月20日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/blog/2026/03/20/Video%20Gen%20Post-Training-research_v1/" title="Video Gen Post-Training 研究分析">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Video Gen Post-Training 研究分析</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/blog/2026/03/09/sim2real/" title="Driving with DINO：用视觉表征破解 Sim2Real 的一致性—真实性困境">
+                        <span class="hidden-mobile">Driving with DINO：用视觉表征破解 Sim2Real 的一致性—真实性困境</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/blog/js/events.js" ></script>
+<script  src="/blog/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/blog/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/blog/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/blog/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
